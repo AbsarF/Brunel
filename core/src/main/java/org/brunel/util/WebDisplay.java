@@ -184,7 +184,7 @@ public class WebDisplay {
     public void buildSingle(VisItem target, int width, int height, String file, String... titles) {
         D3Builder builder = D3Builder.make(options);
         builder.build(target, width, height);
-        String html = writeHtml(builder, width, height, headers, null, titles);
+        String html = WebDisplay.writeHtml(builder, width, height, headers, null, titles);
         writeToFile(file, html);
     }
 

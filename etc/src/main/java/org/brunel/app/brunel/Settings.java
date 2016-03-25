@@ -39,9 +39,11 @@ import java.util.prefs.Preferences;
         store.mkdirs();
     }
 
+     public Settings(Class<?> clazz) {
+         this(clazz.getCanonicalName());
+     }
 
-
-    public String getString(String key) {
+     public String getString(String key) {
         return preferences.get(name + "-" + key, null);
     }
 

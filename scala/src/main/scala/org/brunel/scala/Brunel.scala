@@ -16,17 +16,11 @@
 
 package org.brunel.scala
 
-import org.apache.spark._
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.Row
-
-import org.brunel.data.Dataset
-import org.brunel.data.Field
-import org.brunel.util.D3Integration
-import org.brunel.util.BrunelD3Result
-import org.brunel.data.io.CSV
+import org.apache.spark.sql.{DataFrame, Row}
 import org.brunel.build.util.BuilderOptions
+import org.brunel.data.{Dataset, Field}
+import org.brunel.data.io.CSV
+import org.brunel.util.D3Integration
 
 /**
  * Creation of Brunel output for Spark DataFrames
@@ -48,16 +42,16 @@ object Brunel {
     val builder = D3Integration.makeD3(dataset, brunelSrc, width, height, visId, controlsId)
     new BrunelOutput(builder.getVisualization.toString, builder.getStyleOverrides, builder.getControls)
   }
-  
+
   /**
    * Get the names of all datasets specified in the brunel.
    */
   def getDatasetNames(brunel:String) : Array[String] = {
     return D3Integration.getDatasetNames(brunel)
   }
-  
+
   /**
-   * Cache the contents of a DataFrame using their named references in the data() statement 
+   * Cache the contents of a DataFrame using their named references in the data() statement
    */
   def cacheData(dataKey:String, df:DataFrame) = {
     if (df != null) D3Integration.cacheData(dataKey, makeDataset(df))

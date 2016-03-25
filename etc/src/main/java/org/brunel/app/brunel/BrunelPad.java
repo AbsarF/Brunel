@@ -57,15 +57,15 @@ public class BrunelPad extends JFrame implements AppEventListener, Droppable {
     }
 
     private final Settings settings;
-    private final ActionEditorPane actionEditor;
-    private final SourcePanel sourcePanel;
-    private final List<String> history = new ArrayList<>();
-    private final BuilderOptions options;
+    protected final ActionEditorPane actionEditor;
+    protected final SourcePanel sourcePanel;
+    protected final List<String> history = new ArrayList<>();
+    protected final BuilderOptions options;
     private Dataset base;
     private Action action;
     private Action transitory;
 
-    private BrunelPad(BuilderOptions options) {
+    protected BrunelPad(BuilderOptions options) {
         super("BrunelPad");
         this.options = options;
         settings = new Settings("BrunelPad");
@@ -139,7 +139,7 @@ public class BrunelPad extends JFrame implements AppEventListener, Droppable {
         ExceptionDialog.showError(e, this);
     }
 
-    private void start() {
+    protected void start() {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 setVisible(true);
@@ -170,7 +170,7 @@ public class BrunelPad extends JFrame implements AppEventListener, Droppable {
         return b.toString();
     }
 
-    private void buildDescription() {
+    protected void buildDescription() {
         actionEditor.getActionMap().put(actionEditor.getInputMap().get(KeyStroke.getKeyStroke("ENTER")), new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 String text = actionEditor.getText();
@@ -180,12 +180,31 @@ public class BrunelPad extends JFrame implements AppEventListener, Droppable {
         });
     }
 
-    private void buildGUI() {
+    protected void buildGUI() {
 
+        JPanel bottom = makeBottomPanel();
+
+        buildDescription();
+        bottom.setOpaque(false);
+
+        JSplitPane content = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        content.setDividerLocation(0.6666);
+        content.setResizeWeight(0.6666);
+        setContentPane(content);
+
+        content.setBorder(BorderFactory.createMatteBorder(Common.BORDER, Common.BORDER,
+                Common.BORDER, Common.BORDER, Color.black));
+        content.setBackground(Color.black);
+        content.add(sourcePanel);
+        content.add(bottom);
+    }
+
+    protected JPanel makeBottomPanel() {
         GridBagConstraints cons = new GridBagConstraints();
         cons.weightx = 1.0;
         cons.weighty = 1.0;
         cons.fill = GridBagConstraints.BOTH;
+
         JPanel bottom = new JPanel(new GridBagLayout());
         bottom.setMinimumSize(new Dimension(200, 50));
         bottom.setPreferredSize(new Dimension(2000, 50));
@@ -207,20 +226,7 @@ public class BrunelPad extends JFrame implements AppEventListener, Droppable {
             }
         });
         bottom.add(historyButton, cons);
-
-        buildDescription();
-        bottom.setOpaque(false);
-
-        JSplitPane content = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        content.setDividerLocation(0.6666);
-        content.setResizeWeight(0.6666);
-        setContentPane(content);
-
-        content.setBorder(BorderFactory.createMatteBorder(Common.BORDER, Common.BORDER,
-                Common.BORDER, Common.BORDER, Color.black));
-        content.setBackground(Color.black);
-        content.add(sourcePanel);
-        content.add(bottom);
+        return bottom;
     }
 
     private void setAction(String text) {
@@ -265,17 +271,21 @@ public class BrunelPad extends JFrame implements AppEventListener, Droppable {
 
             String descr = a.simplify().toString();
             actionEditor.setText(descr);
-            int width = getWidth() - 30;
-            Dimension size = new Dimension(width, (int) (width / 1.618));
 
-            WebDisplay display = new WebDisplay(options, "BrunelPad");
-            display.buildSingle(item, size.width, size.height, "index.html", "<h2 style='text-align:center'>" + a + "</h2>");
-            display.showInBrowser();
+            showBrunel(a, item);
 
             if (transitory == null) addToHistory(descr);
         } catch (Throwable e) {
             error(e);
         }
+    }
+
+    protected void showBrunel(Action a, VisItem item) {
+        int width = getWidth() - 30;
+        Dimension size = new Dimension(width, (int) (width / 1.618));
+        WebDisplay display = new WebDisplay(options, "BrunelPad");
+        display.buildSingle(item, size.width, size.height, "index.html", "<h2 style='text-align:center'>" + a + "</h2>");
+        display.showInBrowser();
     }
 
     private void useSource(Dataset source) {
