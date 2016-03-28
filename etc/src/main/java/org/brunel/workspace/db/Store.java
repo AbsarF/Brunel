@@ -55,6 +55,7 @@ public class Store {
 
         }
         logger.info("Opened database " + base.getName());
+
     }
 
     public void execute(String command) {

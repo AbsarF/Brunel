@@ -30,21 +30,28 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
 
     private final Store store;
     private final String title;
+    private final T representative;
 
     private final List<T> items;
-    private final Class<T> itemClass;
 
-    public Stored(Store store, String title, Class<T> itemClass) {
+    public Stored(Store store, String title, T representative) {
         this.store = store;
         this.title = title;
-        this.itemClass = itemClass;
+        this.representative = representative;
         this.items = new ArrayList<>();
     }
 
-    public void add(T item) {
+    public boolean add(T item) {
+        if (items.contains(item)) return false;             // Already contained, do not add again
         int n = items.size();
         items.add(item);
+        item.store();
         fireContentsChanged(this, n, n);
+        return true;
+    }
+
+    public T defineByUserInput() {
+        return (T) representative.defineByUserInput();
     }
 
     public Component getListCellRendererComponent(JList<? extends Item> list, Item value, int index,
@@ -54,29 +61,24 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
         return rep;
     }
 
+    public String getTableDefinition() {
+        return representative.tableDefinition;
+    }
+
+    public String getTableName() {
+        return representative.tableName;
+    }
+
     private void initialize() {
         items.clear();
         addItemsFromStore();
     }
 
-    public T makeNew() {
-        try {
-            // Build and then display a UI to define it
-            T instance = itemClass.newInstance();
-            if (instance.defineByUserInput())
-                return instance;
-            else
-                return null;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @SuppressWarnings("unchecked")
     public static Stored<Item>[] makeStores(Store store) {
         Stored[] items = {
-                new Stored<>(store, "Sources", ItemSource.class),
-                new Stored<>(store, "Charts", ItemChart.class)
+                new Stored<>(store, "Sources", new ItemSource()),
+                new Stored<>(store, "Charts", new ItemChart())
         };
         for (Stored<Item> s : items) s.initialize();
         return items;

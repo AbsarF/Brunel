@@ -60,8 +60,11 @@ public class BrunelWorkspace {
     private BrunelWorkspace(BuilderOptions options) {
 
         Settings settings = new Settings(BrunelWorkspace.class);
+
         Store store = new Store();
         Stored<Item>[] itemSets = Stored.makeStores(store);
+        for (Stored<Item> a : itemSets)
+            Initialization.initializeTable(a, store);
 
         BrunelDisplayPanel brunel = new BrunelDisplayPanel(options);
         ItemsPanel itemsPanel = new ItemsPanel(itemSets);

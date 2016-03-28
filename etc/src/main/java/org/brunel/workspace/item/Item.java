@@ -26,13 +26,25 @@ import java.sql.SQLException;
  */
 public abstract class Item implements Storable<Item> {
 
+    public final String tableName;
+    public final String tableDefinition;
+    private final String imageName;
+
     public String id;
     protected String label;
     private Representation representation;
 
-    public abstract boolean defineByUserInput();
+    protected Item(String tableName, String tableDefinition, String imageName) {
+        this.tableName = tableName;
+        this.tableDefinition = "id varchar primary key, label varchar, " + tableDefinition;
+        this.imageName = imageName;
+    }
 
-    public abstract String getIconResourcePath();
+    public abstract Item defineByUserInput();
+
+    public String getImageName() {
+        return imageName;
+    }
 
     public String getLabel() {
         return label;
@@ -41,6 +53,9 @@ public abstract class Item implements Storable<Item> {
     public Representation getRepresentation() {
         if (representation == null) representation = makeRepresentation();
         return representation;
+    }
+
+    public void store() {
     }
 
     protected abstract Representation makeRepresentation();
@@ -58,4 +73,13 @@ public abstract class Item implements Storable<Item> {
         label = rs.getString(2);
     }
 
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return id.equals(((Item) o).id);
+    }
+
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

@@ -16,6 +16,7 @@
 
 package org.brunel.workspace.util;
 
+import javax.swing.*;
 import java.awt.*;
 
 /**
@@ -30,5 +31,10 @@ public class UI {
         int width = gd.getDisplayMode().getWidth();
         int height = gd.getDisplayMode().getHeight();
         return new Dimension(width, height);
+    }
+
+    public static void warn(JComponent component, String text) {
+        Component c = SwingUtilities.getWindowAncestor(component);
+        JOptionPane.showMessageDialog(c, text, null, JOptionPane.WARNING_MESSAGE);
     }
 }

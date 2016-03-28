@@ -21,6 +21,7 @@ import org.brunel.data.io.CSV;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -29,7 +30,26 @@ import java.sql.SQLException;
  */
 public class ItemSource extends Item {
 
+    private static final String TABLE_NAME = "SOURCES";
+    private static final String TABLE_DEFN = "command varchar, parameters varchar";
+    private static final String IMAGE_NAME = "data16.png";
+
     private String location;
+
+    public ItemSource() {
+        super(TABLE_NAME, TABLE_DEFN, IMAGE_NAME);
+    }
+
+    private ItemSource(File file) {
+        this();
+        try {
+            location = file.getCanonicalPath();
+            label = CSV.readable(file.getName());
+            id = location;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public void createFromStore(ResultSet rs) throws SQLException {
         readCommonFields(rs);
@@ -40,7 +60,7 @@ public class ItemSource extends Item {
         return makeStorableObjects(location);
     }
 
-    public boolean defineByUserInput() {
+    public ItemSource defineByUserInput() {
         FileDialog f = new FileDialog((JFrame) null);
         f.setTitle("Choose a CSV File");
         f.setMode(FileDialog.LOAD);
@@ -48,18 +68,10 @@ public class ItemSource extends Item {
         f.setVisible(true);
         File[] files = f.getFiles();
         if (files.length > 0) {
-            File file = files[0];
-            id = "src-" + file.getName();
-            label = CSV.readable(file.getName());
-            location = file.getAbsolutePath();
-            return true;
+            return new ItemSource(files[0]);
         } else {
-            return false;
+            return null;
         }
-    }
-
-    public String getIconResourcePath() {
-        return "data16.png";
     }
 
     protected Representation makeRepresentation() {

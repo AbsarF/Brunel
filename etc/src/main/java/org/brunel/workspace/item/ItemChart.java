@@ -26,8 +26,16 @@ import java.sql.SQLException;
  */
 public class ItemChart extends Item {
 
+    private static final String TABLE_NAME = "CHARTS";
+    private static final String TABLE_DEFN = "command varchar, parameters varchar";
+    private static final String IMAGE_NAME = "chart16.png";
+
     private String command;
     private String[] parameters;
+
+    public ItemChart() {
+        super(TABLE_NAME, TABLE_DEFN, IMAGE_NAME);
+    }
 
     public void createFromStore(ResultSet rs) throws SQLException {
         readCommonFields(rs);
@@ -39,12 +47,8 @@ public class ItemChart extends Item {
         return makeStorableObjects(command, Data.join(parameters, " | "));
     }
 
-    public boolean defineByUserInput() {
-        return false;
-    }
-
-    public String getIconResourcePath() {
-        return "chart16.png";
+    public ItemChart defineByUserInput() {
+        return null;
     }
 
     protected Representation makeRepresentation() {

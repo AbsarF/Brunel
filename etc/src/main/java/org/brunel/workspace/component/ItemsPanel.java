@@ -68,7 +68,6 @@ public class ItemsPanel extends JPanel {
             }
         });
 
-
         JScrollPane scroller = new JScrollPane(contents,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -101,10 +100,13 @@ public class ItemsPanel extends JPanel {
     private Action makeAddAction() {
         return new AbstractAction("+") {
             public void actionPerformed(ActionEvent e) {
-                Item item = displayedItems.makeNew();
-                if (item != null) {
-                    displayedItems.add(item);
+                Item item = displayedItems.defineByUserInput();         // Make a new item using user input
+                if (item == null) return;                               // User decided against making the item
+                if (displayedItems.add(item)) {
                     fireValidation();
+                } else {
+                    UI.warn(ItemsPanel.this,
+                            "Could not add the items as it already existed -- edit the existing item instead");
                 }
             }
         };

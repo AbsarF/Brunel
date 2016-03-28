@@ -18,6 +18,9 @@ package org.brunel.workspace.util;
 
 import com.teamdev.jxbrowser.chromium.BrowserPreferences;
 import com.teamdev.jxbrowser.chromium.LoggerProvider;
+import org.brunel.workspace.db.Store;
+import org.brunel.workspace.item.Item;
+import org.brunel.workspace.item.Stored;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -60,7 +63,6 @@ public class Initialization {
             // I guess we won't have anything nice
         }
 
-
     }
 
     public static void initializeLogging() {
@@ -75,4 +77,10 @@ public class Initialization {
         logger.addHandler(handler);
     }
 
+    public static void initializeTable(Stored<Item> a, Store store) {
+        String tableName = a.getTableName();
+        String definition = a.getTableDefinition();
+        logger.debug("Ensuring table exists: " + tableName);
+        store.execute("CREATE TABLE IF NOT EXISTS " + tableName + " (" + definition + ");");
+    }
 }

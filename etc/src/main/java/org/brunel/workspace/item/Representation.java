@@ -48,9 +48,8 @@ public class Representation extends JPanel {
 
         title = new GradientStrip(true);
 
-        String iconPath = item.getIconResourcePath();
         try {
-            ImageIcon icon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/" + iconPath)));
+            ImageIcon icon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/" + item.getImageName())));
             title.add(new JLabel(icon));
         } catch (IOException e) {
             e.printStackTrace();
