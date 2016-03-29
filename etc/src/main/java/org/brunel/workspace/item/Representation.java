@@ -34,6 +34,11 @@ public class Representation extends JPanel {
 
     private static final Color backgroundSelected;
     private static final EmptyBorder PADDING_BORDER = new EmptyBorder(2, 2, 2, 2);
+    private final JComponent content;
+
+    public void showContent(boolean state) {
+        content.setVisible(state);
+    }
 
     static {
         UIDefaults defaults = javax.swing.UIManager.getDefaults();
@@ -42,14 +47,15 @@ public class Representation extends JPanel {
 
     private final GradientStrip title;
 
-    public Representation(Item item) {
+    public Representation(Item item, JComponent content) {
         super(new BorderLayout(0, 0));
-        setBackground(UI.BACKGROUND);
+        this.content = content;
+        setBackground(Color.pink);
 
         title = new GradientStrip(true);
 
         try {
-            ImageIcon icon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/" + item.getImageName())));
+            ImageIcon icon = new ImageIcon(ImageIO.read(getClass().getResource("/icons/" + item.definition.imageName)));
             title.add(new JLabel(icon));
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,13 +66,18 @@ public class Representation extends JPanel {
         label.setBorder(PADDING_BORDER);
         title.add(label);
         add(title, BorderLayout.NORTH);
+
+        if (content != null) {
+            content.setVisible(false);
+            add(content, BorderLayout.CENTER);
+        }
+
         setBorder(Color.gray);
     }
 
     public void setState(boolean selected, boolean focused) {
         title.setColorB(selected ? backgroundSelected : UI.CONTROLS);
         setBorder(focused ? UI.CONTROLS : UI.BACKGROUND);
-
     }
 
     private void setBorder(Color color) {

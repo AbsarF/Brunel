@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package org.brunel.workspace.db;
+package org.brunel.workspace.item;
 
 /**
- * Storable items
+ * Created by graham on 3/28/16.
  */
+public class ItemDefinition {
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+    public final String tableName;
+    public final String tableDefinition;
+    public final Item[] defaultItems;
+    public final String imageName;
 
-/**
- * Creates a storable item from a stored row
- */
-public interface Storable {
-    Storable retrieve(ResultSet rs) throws SQLException;
 
-    Object[] toStorableObjects();
+    public ItemDefinition(String tableName, String tableDefinition, String imageName, Item[] defaultItems) {
+        this.tableName = tableName;
+        this.tableDefinition = "id varchar primary key, label varchar, " + tableDefinition;
+        this.defaultItems = defaultItems;
+        this.imageName = imageName;
+    }
 }

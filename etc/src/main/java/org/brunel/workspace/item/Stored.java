@@ -16,10 +16,12 @@
 
 package org.brunel.workspace.item;
 
+import org.brunel.workspace.data.ItemSource;
 import org.brunel.workspace.db.Store;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,10 +33,11 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
     private final Store store;
     private final String title;
     private final T representative;
+    private T selected;
 
     private final List<T> items;
 
-    public Stored(Store store, String title, T representative) {
+    private Stored(Store store, String title, T representative) {
         this.store = store;
         this.title = title;
         this.representative = representative;
@@ -42,16 +45,51 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
     }
 
     public boolean add(T item) {
-        if (items.contains(item)) return false;             // Already contained, do not add again
+        try {
+            store.addToTable(item.definition.tableName, item);
+        } catch (Exception e) {
+            if (isSQLConstraint(e.getCause())) return false;
+            throw e;
+        }
         int n = items.size();
         items.add(item);
-        item.store();
         fireContentsChanged(this, n, n);
         return true;
     }
 
+    public void remove(T item) {
+        store.removeFromTable(item.definition.tableName, item);
+        items.remove(item);
+        fireContentsChanged(this, 0, items.size());
+    }
+
+    public void select(T value) {
+        if (selected != null) {
+            selected.getRepresentation().showContent(false);
+            int p = items.indexOf(selected);
+            fireContentsChanged(this, p, p);
+        }
+        if (value != null) {
+            value.getRepresentation().showContent(true);
+            int p = items.indexOf(value);
+            fireContentsChanged(this, p, p);
+        }
+        selected = value;
+    }
+
+    private boolean isSQLConstraint(Throwable e) {
+        if (e instanceof SQLException) {
+            SQLException s = (SQLException) e;
+            return s.getMessage().toLowerCase().contains("constraint violation");
+        } else {
+            return false;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public T defineByUserInput() {
         return (T) representative.defineByUserInput();
+
     }
 
     public Component getListCellRendererComponent(JList<? extends Item> list, Item value, int index,
@@ -62,16 +100,22 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
     }
 
     public String getTableDefinition() {
-        return representative.tableDefinition;
+        return representative.definition.tableDefinition;
     }
 
     public String getTableName() {
-        return representative.tableName;
+        return representative.definition.tableName;
     }
 
+    public Item[] getDefaultItems() {
+        return representative.definition.defaultItems;
+    }
+
+    @SuppressWarnings("unchecked")
     private void initialize() {
         items.clear();
-        addItemsFromStore();
+        List list = store.retrieve(representative.definition.tableName, representative);
+        items.addAll(list);
     }
 
     @SuppressWarnings("unchecked")
@@ -82,14 +126,6 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
         };
         for (Stored<Item> s : items) s.initialize();
         return items;
-    }
-
-    public void remove(int item) {
-        items.remove(item);
-        fireContentsChanged(this, item, items.size());
-    }
-
-    private final void addItemsFromStore() {
     }
 
     public String toString() {

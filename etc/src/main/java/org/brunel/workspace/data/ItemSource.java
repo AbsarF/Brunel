@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package org.brunel.workspace.item;
+package org.brunel.workspace.data;
 
+import org.brunel.data.Field;
 import org.brunel.data.io.CSV;
+import org.brunel.workspace.item.Item;
+import org.brunel.workspace.item.ItemDefinition;
+import org.brunel.workspace.item.Representation;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -30,30 +36,35 @@ import java.sql.SQLException;
  */
 public class ItemSource extends Item {
 
-    private static final String TABLE_NAME = "SOURCES";
-    private static final String TABLE_DEFN = "command varchar, parameters varchar";
-    private static final String IMAGE_NAME = "data16.png";
+    private static final ItemDefinition DEFINITION = new ItemDefinition(
+            "SOURCES", "location varchar", "data16.png", new Item[0]
+    );
 
     private String location;
 
     public ItemSource() {
-        super(TABLE_NAME, TABLE_DEFN, IMAGE_NAME);
+        super(DEFINITION);
     }
 
     private ItemSource(File file) {
         this();
         try {
             location = file.getCanonicalPath();
-            label = CSV.readable(file.getName());
+            String name = file.getName();
+            int p = name.lastIndexOf('.');
+            if (p > 0) name = name.substring(0, p);
+            label = CSV.readable(name);
             id = location;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void createFromStore(ResultSet rs) throws SQLException {
-        readCommonFields(rs);
-        location = rs.getString(3);
+    public ItemSource retrieve(ResultSet rs) throws SQLException {
+        ItemSource result = new ItemSource();
+        result.readCommonFields(rs);
+        result.location = rs.getString(3);
+        return result;
     }
 
     public Object[] toStorableObjects() {
@@ -75,6 +86,22 @@ public class ItemSource extends Item {
     }
 
     protected Representation makeRepresentation() {
-        return new Representation(this);
+        return new Representation(this, makeFieldsList());
+    }
+
+    private JComponent makeFieldsList() {
+        Box box = Box.createVerticalBox();
+        box.setBackground(Color.CYAN);
+        box.setOpaque(true);
+        try {
+            String content = new String(Files.readAllBytes(Paths.get(location)), "utf-8");
+            Field[] fields = CSV.read(content);
+            for (Field f : fields) {
+                box.add(new JLabel(f.label));
+            }
+            return box;
+        } catch (Exception e) {
+            return new JLabel("Error reading file");
+        }
     }
 }

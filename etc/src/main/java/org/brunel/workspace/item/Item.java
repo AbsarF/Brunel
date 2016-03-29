@@ -24,27 +24,19 @@ import java.sql.SQLException;
 /**
  * A storeable thing
  */
-public abstract class Item implements Storable<Item> {
+public abstract class Item implements Storable {
 
-    public final String tableName;
-    public final String tableDefinition;
-    private final String imageName;
+    public final ItemDefinition definition;
 
     public String id;
     protected String label;
     private Representation representation;
 
-    protected Item(String tableName, String tableDefinition, String imageName) {
-        this.tableName = tableName;
-        this.tableDefinition = "id varchar primary key, label varchar, " + tableDefinition;
-        this.imageName = imageName;
+    protected Item(ItemDefinition definition) {
+        this.definition = definition;
     }
 
     public abstract Item defineByUserInput();
-
-    public String getImageName() {
-        return imageName;
-    }
 
     public String getLabel() {
         return label;
@@ -53,9 +45,6 @@ public abstract class Item implements Storable<Item> {
     public Representation getRepresentation() {
         if (representation == null) representation = makeRepresentation();
         return representation;
-    }
-
-    public void store() {
     }
 
     protected abstract Representation makeRepresentation();
@@ -81,5 +70,9 @@ public abstract class Item implements Storable<Item> {
 
     public int hashCode() {
         return id.hashCode();
+    }
+
+    public String toString() {
+        return label + " (" + id + ")";
     }
 }

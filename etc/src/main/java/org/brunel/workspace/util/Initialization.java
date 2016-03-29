@@ -82,5 +82,11 @@ public class Initialization {
         String definition = a.getTableDefinition();
         logger.debug("Ensuring table exists: " + tableName);
         store.execute("CREATE TABLE IF NOT EXISTS " + tableName + " (" + definition + ");");
+
+        if (store.getTableSize(tableName) == 0 && a.getDefaultItems().length > 0) {
+            logger.info("Initializing table with standard contents: " + tableName);
+            for (Item s : a.getDefaultItems())
+                a.add(s);
+        }
     }
 }

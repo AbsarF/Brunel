@@ -37,4 +37,11 @@ public class UI {
         Component c = SwingUtilities.getWindowAncestor(component);
         JOptionPane.showMessageDialog(c, text, null, JOptionPane.WARNING_MESSAGE);
     }
+
+    public static boolean areYouSure(JComponent component, String text) {
+        Component c = SwingUtilities.getWindowAncestor(component);
+        int result = JOptionPane.showConfirmDialog(c, "Are you sure you want to " + text + "?",
+                null, JOptionPane.YES_NO_OPTION);
+        return result == JOptionPane.YES_OPTION;
+    }
 }

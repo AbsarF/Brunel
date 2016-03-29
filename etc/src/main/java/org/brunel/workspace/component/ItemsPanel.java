@@ -40,7 +40,7 @@ public class ItemsPanel extends JPanel {
 
     private final Action add, remove;
 
-    public ItemsPanel(Stored<Item>[] categories) {
+    public ItemsPanel(final Stored<Item>[] categories) {
         super(new GridBagLayout());
         this.add = makeAddAction();
         this.remove = makeRemoveAction();
@@ -64,7 +64,9 @@ public class ItemsPanel extends JPanel {
         contents.setBackground(UI.BACKGROUND);
         contents.addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) {
-                remove.setEnabled(contents.getSelectedValue() != null);
+                Item value = contents.getSelectedValue();
+                remove.setEnabled(value != null);
+                displayedItems.select(value);
             }
         });
 
@@ -89,8 +91,11 @@ public class ItemsPanel extends JPanel {
     private Action makeRemoveAction() {
         AbstractAction action = new AbstractAction("-") {
             public void actionPerformed(ActionEvent e) {
-                displayedItems.remove(contents.getSelectedIndex());
-                fireValidation();
+                Item value = contents.getSelectedValue();
+                if (UI.areYouSure(ItemsPanel.this, "PERMANENTLY delete the item '" + value + "'")) {
+                    displayedItems.remove(value);
+                    fireValidation();
+                }
             }
         };
         action.setEnabled(false);

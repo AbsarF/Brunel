@@ -26,21 +26,58 @@ import java.sql.SQLException;
  */
 public class ItemChart extends Item {
 
-    private static final String TABLE_NAME = "CHARTS";
-    private static final String TABLE_DEFN = "command varchar, parameters varchar";
-    private static final String IMAGE_NAME = "chart16.png";
+
+    private static final String[] base = new String[]{
+            "bar | Bar Chart | bar x($1) y(#count) tooltip(#all) sort(#count) | categorical:20",
+            "stacked | Stacked Bar | bar x($1) color($2) y(#count) tooltip(#all) sort(#count) | categorical:20, categorical:5",
+            "barGrp | Group Bar | bar x($1) y($2) color($3) sort($3, $2) mean($2) | categorical:300, numeric, categorical:5",
+            "scatter | Scatterplot | point x($1) y($2) | any, any",
+            "scatterGroup | Group Scatter | point x($1) y($2) color($3) tooltip(#all) + line x($1) y($2) color($3) fit($2) | numeric, numeric, categorical:3",
+            "line | Line Chart | line x($1) y($2) mean($2) | any, any",
+            "bubble | Bubble Chart | point x($1) y($2) size($3) | any, any, positive",
+            "wordle | Wordle | text x($1) cloud color($1) size(#count) | categorical:200",
+            "wordle2 | Sized Wordle | text x($1) cloud color($1) size($2) | categorical:200, positive",
+            "heatmap | Heat Map | x($1) y($2) sort(#count) color(#count) label(#count) | categorical:15, categorical:15",
+            "treemap | TreeMap | bar x($1) treemap color($1[-1]) size(#count) label($1[-0]) | multiCategorical",
+            "choropleth | Map | map x($1) label($1) color($2) tooltip(#all) | categorical, any",
+            "lineGroup | Line Chart | line x($1) y($2) color($3) mean($2) | any, any, categorical"
+    };
+
+    private static Item[] makeInitialCharts() {
+        Item[] charts = new Item[base.length];
+        for (int i = 0; i < base.length; i++) {
+            String[] parts = base[i].split(" *\\| *");
+            String[] parameterDefinitions = parts[3].split(" *\\, *");
+            charts[i] = new ItemChart(parts[0], parts[1], parts[2], parameterDefinitions);
+        }
+        return charts;
+    }
+
+    private static final ItemDefinition DEFINITION = new ItemDefinition(
+            "CHARTS", "command varchar, parameters varchar", "chart16.png", makeInitialCharts()
+    );
 
     private String command;
     private String[] parameters;
 
     public ItemChart() {
-        super(TABLE_NAME, TABLE_DEFN, IMAGE_NAME);
+        super(DEFINITION);
     }
 
-    public void createFromStore(ResultSet rs) throws SQLException {
-        readCommonFields(rs);
-        command = rs.getString(3);
-        parameters = rs.getString(4).split(" \\| ");
+    public ItemChart(String id, String label, String command, String[] parameters) {
+        super(DEFINITION);
+        this.id = id;
+        this.label = label;
+        this.command = command;
+        this.parameters = parameters;
+    }
+
+    public ItemChart retrieve(ResultSet rs) throws SQLException {
+        ItemChart item = new ItemChart();
+        item.readCommonFields(rs);
+        item.command = rs.getString(3);
+        item.parameters = rs.getString(4).split(" \\| ");
+        return item;
     }
 
     public Object[] toStorableObjects() {
@@ -52,6 +89,6 @@ public class ItemChart extends Item {
     }
 
     protected Representation makeRepresentation() {
-        return new Representation(this);
+        return new Representation(this, null);
     }
 }

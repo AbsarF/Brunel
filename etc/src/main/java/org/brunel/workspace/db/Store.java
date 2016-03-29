@@ -25,8 +25,11 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Keeps track of all stored data
@@ -58,6 +61,67 @@ public class Store {
 
     }
 
+    public void addToTable(String tableName, Storable storable) {
+        Object[] values = storable.toStorableObjects();
+        String sql = makePreparedCommand(tableName, values);
+        logger.debug("Adding to table with command: " + sql);
+        try {
+            PreparedStatement s = connection.prepareStatement(sql);
+            for (int i = 0; i < values.length; i++)
+                setFieldValue(s, i + 1, values[i]);
+            s.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public int getTableSize(String tableName) {
+        try {
+            Statement s = connection.createStatement();
+            ResultSet rs = s.executeQuery("SELECT COUNT(*) FROM " + tableName);
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void removeFromTable(String tableName, Storable item) {
+        Object itemID = item.toStorableObjects()[0];
+        execute("DELETE FROM " + tableName + " WHERE ID='" + itemID + "'");
+    }
+
+    public List<Storable> retrieve(String tableName, Storable representative) {
+        ArrayList<Storable> list = new ArrayList<>();
+        try {
+            logger.debug("Reading items from: " + tableName);
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * from " + tableName + ";");
+
+            while (rs.next()) {
+                Storable item = representative.retrieve(rs);
+                logger.trace("Read " + item);
+                list.add(item);
+            }
+            rs.close();
+            stmt.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return list;
+    }
+
+    private String makePreparedCommand(String tableName, Object[] values) {
+        StringBuilder b = new StringBuilder();
+        b.append("INSERT INTO ").append(tableName).append(" VALUES (");
+        for (int i = 0; i < values.length; i++) {
+            if (i > 0) b.append(',');
+            b.append('?');
+        }
+        b.append(");");
+        return b.toString();
+    }
+
     public void execute(String command) {
         try {
             logger.debug("Executing SQL: " + command);
@@ -68,45 +132,6 @@ public class Store {
             logger.error("Failed to execute SQL update command", e);
         }
     }
-
-    public void executeWrite(String statement, Storable[] items) {
-        logger.debug("Executing SQL Write: " + statement);
-        PreparedStatement s;
-        try {
-            s = connection.prepareStatement(statement);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        for (Storable item : items) {
-            Object[] data = item.toStorableObjects();
-            logger.trace("Stored " + item);
-            try {
-                for (int i = 0; i < data.length; i++) setFieldValue(s, i + 1, data[i]);
-                s.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-//    public <T extends Storable> void executeRead(String command, Storable<T> retriever, Collection<T> results) {
-//        try {
-//            logger.debug("Executing SQL Read: " + command);
-//            Statement stmt = connection.createStatement();
-//            ResultSet rs = stmt.executeQuery(command);
-//
-//            while (rs.next()) {
-//                T item = retriever.createFromStore(rs);
-//                results.add(item);
-//                logger.trace("Read " + item);
-//            }
-//            rs.close();
-//            stmt.close();
-//
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
 
     private void setFieldValue(PreparedStatement statement, int index, Object o) throws SQLException {
         if (o instanceof String) statement.setString(index, (String) o);
