@@ -31,6 +31,8 @@ import org.brunel.workspace.util.UI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.IOException;
 import java.util.Collections;
 
@@ -43,17 +45,26 @@ public class BrunelDisplayPanel extends BrowserView implements ActivityListener 
 
     private static final String INITIAL_HTML =
             "<html><body><div style='font-family:Helvetica;font-weight:bold;width:100%;height:100%'>" +
-                    "<span style='color:red;position:absolute;top:20%;left:10vw;font-size:30vh'>Brunel</span>" +
-                    "<span style='opacity:0.3;position:absolute;top:39.5%;left:22vw;font-size:16vh;font-style:italic'>" +
+                    "<span style='color:red;position:absolute;top:20%;left:10vw;font-size:25vh'>Brunel</span>" +
+                    "<span style='opacity:0.3;position:absolute;top:39.5%;left:22vw;font-size:14vh;font-style:italic'>" +
                     "Workspace&nbsp;&nbsp;</span>" +
                     "</div></body></html>";
-    private final BuilderOptions buildOptions;
+
+    private final D3Builder builder;
+    private VisItem item;
 
     public BrunelDisplayPanel(BuilderOptions buildOptions, Activity activity) {
-        this.buildOptions = buildOptions;
         setBackground(UI.BACKGROUND);
         getBrowser().loadHTML(INITIAL_HTML);
         activity.addListener(this);
+        builder = D3Builder.make(buildOptions);
+
+        addComponentListener(new ComponentAdapter() {
+            public void componentResized(ComponentEvent e) {
+                if (item == null)  getBrowser().loadHTML(INITIAL_HTML);
+                else showSimple(item);
+            }
+        });
     }
 
     public void handleActivity(ActivityEvent event) {
@@ -72,7 +83,7 @@ public class BrunelDisplayPanel extends BrowserView implements ActivityListener 
     }
 
     private void showSimple(VisItem item) {
-        D3Builder builder = D3Builder.make(buildOptions);
+        this.item = item;
         int width = getWidth() - 20;
         int height = getHeight() - 20;
         builder.build(item, width, height);

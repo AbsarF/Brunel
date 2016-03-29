@@ -43,6 +43,11 @@ import java.util.prefs.Preferences;
          this(clazz.getCanonicalName());
      }
 
+     public int getInteger(String key, int defaultValue) {
+         String v = getString(key);
+         return v == null ? defaultValue : Integer.parseInt(v);
+     }
+
      public String getString(String key) {
         return preferences.get(name + "-" + key, null);
     }
