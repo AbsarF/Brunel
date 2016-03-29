@@ -78,7 +78,7 @@ import java.util.TooManyListenersException;
         list.setVisibleRowCount(-1);
         list.setBackground(Common.BLUE8);
         list.setBorder(BorderFactory.createMatteBorder(5, 5, 5, 5, Common.BLUE8));
-        list.setForeground(Common.BLUE3);
+        list.setForeground(new Color(0, 178, 239));
         list.setFont(Common.MEDIUM);
         list.setAutoscrolls(true);
         JScrollPane scroller = new JScrollPane(list);

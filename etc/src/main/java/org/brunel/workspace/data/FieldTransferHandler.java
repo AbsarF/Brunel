@@ -32,7 +32,6 @@ import java.io.IOException;
 public class FieldTransferHandler extends TransferHandler {
 
     public static final DataFlavor FIELD_FLAVOR = new DataFlavor(Field.class, "field");
-    public static final DataFlavor DATA_FLAVOR = new DataFlavor(Dataset.class, "data");
 
     public void exportAsDrag(JComponent comp, InputEvent e, int action) {
         super.exportAsDrag(comp, e, action);
@@ -67,29 +66,29 @@ public class FieldTransferHandler extends TransferHandler {
         FieldComponent fieldComponent = (FieldComponent) c.getParent();
         Field f = fieldComponent.field;
         Dataset data = fieldComponent.dataset;
-        return new FieldTransferable(f, data);
+        String source = data.strProperty("source");
+        if (source == null) throw new IllegalStateException("Transferable data must have a defined source");
+        f.set("source", source);
+        return new FieldTransferable(f);
     }
 
     private static class FieldTransferable implements Transferable {
         private final Field field;
-        private final Dataset data;
 
-        public FieldTransferable(Field f, Dataset data) {
+        public FieldTransferable(Field f) {
             field = f;
-            this.data = data;
         }
 
         public DataFlavor[] getTransferDataFlavors() {
-            return new DataFlavor[]{FIELD_FLAVOR, DATA_FLAVOR};
+            return new DataFlavor[]{FIELD_FLAVOR};
         }
 
         public boolean isDataFlavorSupported(DataFlavor flavor) {
-            return flavor == FIELD_FLAVOR || flavor == DATA_FLAVOR;
+            return flavor == FIELD_FLAVOR;
         }
 
         public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
             if (flavor == FIELD_FLAVOR) return field;
-            if (flavor == DATA_FLAVOR) return data;
             throw new UnsupportedFlavorException(flavor);
         }
     }

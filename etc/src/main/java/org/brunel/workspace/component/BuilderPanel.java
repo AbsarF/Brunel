@@ -16,6 +16,7 @@
 
 package org.brunel.workspace.component;
 
+import org.brunel.build.util.DataCache;
 import org.brunel.data.Dataset;
 import org.brunel.data.Field;
 import org.brunel.workspace.activity.Activity;
@@ -23,67 +24,137 @@ import org.brunel.workspace.activity.ActivityEvent;
 import org.brunel.workspace.activity.ActivityListener;
 import org.brunel.workspace.item.ItemChart;
 import org.brunel.workspace.item.ItemVis;
+import org.brunel.workspace.util.UI;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
 import java.awt.*;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
- * Created by graham on 3/24/16.
+ * Builds Brunel
  */
 public class BuilderPanel extends JPanel implements ActivityListener {
 
-    private final java.util.List<Field> fields = new ArrayList<>();
     private final Activity activity;
+    private final JLabel definitionComponent;
+    private final Box fieldsComponent;
     private ItemChart chart;
+    private Field[] param;
     private Dataset data;
-    private ItemVis vis;
 
     public BuilderPanel(Activity activity) {
         super(new GridBagLayout());
+        setBackground(UI.BACKGROUND);
         this.activity = activity;
+        this.definitionComponent = makeDefinition();
+        this.fieldsComponent = makeFieldsPanel();
+
         GridBagConstraints cons = new GridBagConstraints();
         cons.gridx = 0;
         cons.gridy = GridBagConstraints.RELATIVE;
-        cons.fill = GridBagConstraints.HORIZONTAL;
-        cons.weightx = 1.0;
-        cons.weighty = 0.0;
+        cons.fill = GridBagConstraints.BOTH;
+        cons.weightx = 1;
+        cons.weighty = 0;
 
-//        add(makeDefinitionPanel(activity), cons);
-//        add(makeFieldSlotsPanel(activity), cons);
-//        add(makeBrunelEditorPanel(activity), cons);
+        // The top panel gives overall definitions and slots to drag to
+        Box top = Box.createHorizontalBox();
+        top.setBorder(new MatteBorder(1,0,1,0, UI.CONTROLS));
+        top.add(definitionComponent);
+        top.add(fieldsComponent);
+        top.add(Box.createVerticalStrut(32));
+        top.add(Box.createHorizontalGlue());
+        add(top, cons);
 
-        cons.weighty = 1.0;
-        add(Box.createVerticalGlue(), cons);
+        // And the brunel definition
+        cons.weighty = 1;
+        add(makeBrunelPanel(), cons);
+
         activity.addListener(this);
+    }
 
+    public void setFieldParameter(int index, Field field) {
+        param[index] = field;
+        ((FieldSlot) fieldsComponent.getComponent(index)).setField((Field) field);
+        if (field == null) return;
+        try {
+            this.data = DataCache.get(field.strProperty("source"));
+            if (this.data == null) throw new NullPointerException("No source property found in field");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // remove fields from other data sets
+        for (int i = 0; i < param.length; i++)
+            if (param[i] != null && data.field(param[i].name) == null)
+                param[i] = null;
+
+        fireChanges();
+    }
+
+    private int getFirstEmptyParameter() {
+        for (int i = 0; i < param.length; i++)
+            if (param[i] == null) return i;
+        return 0;
+    }
+
+    private JLabel makeDefinition() {
+        JLabel label = new JLabel();
+        label.setBorder(new EmptyBorder(2, 6, 2, 2));
+        return label;
+    }
+
+    private Box makeFieldsPanel() {
+        Box box = Box.createHorizontalBox();
+        box.setBackground(UI.BACKGROUND);
+        box.setBorder(new EmptyBorder(6,2,6,2));
+        return box;
+    }
+
+    private Component makeBrunelPanel() {
+        BrunelEditor editor = new BrunelEditor(activity);
+        editor.setPreferredSize(new Dimension(10000, 60));
+        return editor;
     }
 
     public void handleActivity(ActivityEvent event) {
-        boolean change = false;
-        if (event.getField() != null) {
-            fields.add(0, event.getField());
-            change = true;
-        }
-        if (event.getChart() != null) {
+        if (event.getChart() != null && event.getChart() != chart) {
             chart = event.getChart();
-            change = true;
+            buildForChart();
+        } else if (event.type == ActivityEvent.Type.activate && event.getField() != null && param != null) {
+            setFieldParameter(getFirstEmptyParameter(), event.getField());
+            fireChanges();
         }
-        if (event.getData() != null) {
-            if (data != event.getData()) fields.clear();
-            data = event.getData();
-            change = true;
-        }
-        if (change) propagateIfValid();
     }
 
-    private void propagateIfValid() {
-        if (data == null || chart == null || chart.parameters.length > fields.size()) return;
-        String dataDefinition = data.strProperty("source");
-        vis = new ItemVis(dataDefinition, makeText(), activity);
+    private void buildForChart() {
+        definitionComponent.setText(chart.getLabel());
+        definitionComponent.setToolTipText(chart.command);
+        fieldsComponent.removeAll();
+        param = new Field[chart.parameters.length];
+        for (int i = 0; i < chart.parameters.length; i++)
+            fieldsComponent.add(new FieldSlot(chart.parameters[i], i, this));
+        fireChanges();
+    }
+
+    private void fireChanges() {
+        validate();
+        repaint();
+
+        if (chart == null) return;
+
+        // We can make an action, even with no fields
+        String brunelCommand = makeText();
+        activity.fireSelect(org.brunel.action.Action.parse(brunelCommand), this);
+
+        // Can we make a complete vis item?
+        if (data == null) return;
+        for (Field s : param) if (s == null) return;
+
+        ItemVis vis = new ItemVis(param[0].strProperty("source"), brunelCommand, activity);
         activity.fireActivate(vis, this);
     }
 
@@ -94,7 +165,7 @@ public class BuilderPanel extends JPanel implements ActivityListener {
 
         for (int i = 0; i < parameters.length; i++) {
             String p = parameters[i].toLowerCase();
-            Field f = fields.get(i);
+            Field field = param[i];
 
             if (p.startsWith("multi")) {
                 // Multiple fields
@@ -103,23 +174,23 @@ public class BuilderPanel extends JPanel implements ActivityListener {
 
                 // Bin each if needed
                 if (p.startsWith("multicat")) {
-                    for (int j = i; j < fields.size(); j++) {
-                        int bins = needsBinning(p, fields.get(j));
-                        if (bins > 0) toBin.put(fields.get(j), bins);
+                    for (int j = i; j < param.length; j++) {
+                        int bins = needsBinning(p, param[j]);
+                        if (bins > 0) toBin.put(param[j], bins);
                     }
                 }
 
                 // Modify the text
-                text = this.modifyStringForMulti(text, fields, i);
+                text = this.modifyStringForMulti(text, param, i);
 
             } else {
 
                 // Handle binning (including converting to categorical when needed
-                int bins = needsBinning(p, f);
-                if (bins > 0) toBin.put(f, bins);
+                int bins = needsBinning(p, field);
+                if (bins > 0) toBin.put(field, bins);
 
                 // Modify the text
-                text = text.replaceAll("\\$" + (i + 1), f.name);
+                if (field != null) text = text.replaceAll("\\$" + (i + 1), field.name);
             }
 
         }
@@ -136,24 +207,25 @@ public class BuilderPanel extends JPanel implements ActivityListener {
         return "BuilderPanel";
     }
 
-    private String modifyStringForMulti(String text, List<Field> fields, int start) {
-        int n = fields.size() - start;
+    private String modifyStringForMulti(String text, Field[] fields, int start) {
+        int n = fields.length - start;
         String all = "";
 
         for (int i = 0; i < n; ++i) {
-            text = text.replaceAll("\\$" + (start + 1) + "\\[" + i + "\\]", fields.get(start + i).name);
-            text = text.replaceAll("\\$" + (start + 1) + "\\[-" + i + "\\]", fields.get(fields.size() - 1 - i).name);
+            text = text.replaceAll("\\$" + (start + 1) + "\\[" + i + "\\]", fields[start + i].name);
+            text = text.replaceAll("\\$" + (start + 1) + "\\[-" + i + "\\]", fields[fields.length - 1 - i].name);
             if (i > 0) {
                 all = all + ", ";
             }
 
-            all = all + fields.get(start + i).name;
+            all = all + fields[start + i].name;
         }
 
         return text.replaceAll("\\$" + (start + 1), all);
     }
 
     private int needsBinning(String p, Field f) {
+        if (f == null) return -1;
         String[] parts = p.split(":");
         String main = parts[0].trim();
         int divs = parts.length > 1 ? Integer.parseInt(parts[1].trim()) : -1;

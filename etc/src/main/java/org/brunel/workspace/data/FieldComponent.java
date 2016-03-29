@@ -46,6 +46,7 @@ public class FieldComponent extends JPanel {
         super(new BorderLayout());
         this.field = field;
         this.dataset = dataset;
+        field.set("source", dataset.strProperty("source"));
 
         Icon icon = field.isDate() ? dateIcon : (field.preferCategorical() ? categoricalIcon : numericIcon);
         JLabel label = new JLabel(restrictSize(field.label), icon, JLabel.LEADING);

@@ -21,7 +21,6 @@ import org.brunel.workspace.util.UI;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -33,7 +32,6 @@ import java.awt.event.MouseEvent;
 public class Representation extends JPanel {
 
     private static final Color backgroundSelected;
-    private static final EmptyBorder PADDING_BORDER = new EmptyBorder(2, 2, 2, 2);
 
     public final Item item;
     public final JComponent content;
@@ -70,7 +68,7 @@ public class Representation extends JPanel {
 
         title.add(Box.createHorizontalGlue());
         JLabel label = new JLabel(item.label);
-        label.setBorder(PADDING_BORDER);
+        label.setBorder(UI.BORDER_PADDING);
         title.add(label);
         add(title, BorderLayout.NORTH);
 
@@ -83,7 +81,7 @@ public class Representation extends JPanel {
     }
 
     private void setBorder(Color color) {
-        setBorder(new CompoundBorder(PADDING_BORDER, new LineBorder(color, 1)));
+        setBorder(new CompoundBorder(UI.BORDER_PADDING, new LineBorder(color, 1)));
     }
 
     public String toString() {

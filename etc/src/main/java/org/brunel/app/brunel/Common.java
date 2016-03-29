@@ -28,8 +28,6 @@ public class Common {
     /* Font */
     public static final Font MEDIUM = new Font("Inconsolata, Arial", Font.PLAIN, 12);
 
-    /* Watson colors */
-    public static final Color BLUE3 = new Color(0, 178, 239);
     public static final Color BLUE8 = new Color(0, 25, 52);
     public static final Color GREEN2 = new Color(23, 175, 75);
 
@@ -40,7 +38,7 @@ public class Common {
     public static JMenuItem makeMenuItem(String s, ActionListener listener) {
         JMenuItem item = new JMenuItem(s);
         item.setBackground(BLUE8);
-        item.setForeground(BLUE3);
+        item.setForeground(new Color(0, 178, 239));
         item.setFont(MEDIUM);
         item.addActionListener(listener);
         return item;
@@ -50,7 +48,7 @@ public class Common {
         JButton button = new JButton(icon);
         button.setToolTipText(tooltip);
         button.setBackground(BLUE8);
-        button.setForeground(BLUE3);
+        button.setForeground(new Color(0, 178, 239));
         button.setBorder(BorderFactory.createMatteBorder(5, 5, 5, 5, new Color(0, 0, 0, 0)));
         button.setFont(BIG);
         return button;

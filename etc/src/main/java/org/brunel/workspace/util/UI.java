@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.IOException;
 
@@ -33,6 +35,8 @@ public class UI {
     public static final Color BACKGROUND = Color.white;
     public static final Color CONTROLS = new Color(200, 200, 222);
     public static final Font SMALL_FONT = new Font("Arial", Font.PLAIN, 11);
+    public static final Color HIGHLIGHT = new Color(235, 235, 255);
+    public static final Border BORDER_PADDING = new EmptyBorder(2, 2, 2, 2);
 
     public static Dimension getScreenSize() {
         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();

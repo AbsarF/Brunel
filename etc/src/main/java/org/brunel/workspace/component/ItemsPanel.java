@@ -85,7 +85,7 @@ public class ItemsPanel extends JPanel implements ActivityListener {
     }
 
     public void handleActivity(ActivityEvent event) {
-        if (event.target instanceof Item) {
+        if (displayedItems.contains(event.target)) {
             selectItem((Item) event.target);
         }
     }

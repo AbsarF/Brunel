@@ -43,6 +43,8 @@ public class ItemVis extends Item {
         super(DEFINITION, activity);
         this.dataDef = dataDef;
         this.brunelCommand = brunelCommand;
+        if (dataDef == null) throw new NullPointerException("Data must be defined");
+        if (brunelCommand == null) throw new NullPointerException("Brunel must be defined");
     }
 
     public Dataset getDataset() throws IOException {

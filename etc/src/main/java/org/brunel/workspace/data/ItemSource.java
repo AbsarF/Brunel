@@ -53,7 +53,7 @@ public class ItemSource extends Item {
 
     };
 
-    private String location;
+    public String location;
 
     public ItemSource(Activity activity) {
         super(DEFINITION, activity);
@@ -108,6 +108,7 @@ public class ItemSource extends Item {
         box.setOpaque(true);
         try {
             Dataset dataset = DataCache.get(location);
+            dataset.set("source", location);
             for (Field f : dataset.fields)
                 if (!f.isSynthetic()) box.add(new FieldComponent(f, dataset, activity, DRAG_LISTENER));
             return box;
