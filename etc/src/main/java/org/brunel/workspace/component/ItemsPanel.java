@@ -36,7 +36,6 @@ import java.awt.event.ActionListener;
  */
 public class ItemsPanel extends JPanel implements ActivityListener {
 
-    private final Activity activity;
     private Stored<Item> displayedItems;
     private final JPanel contents;
     private Item selected;
@@ -45,7 +44,6 @@ public class ItemsPanel extends JPanel implements ActivityListener {
 
     public ItemsPanel(final Stored<Item>[] categories, Activity activity) {
         super(new GridBagLayout());
-        this.activity = activity;
         this.add = makeAddAction();
         this.remove = makeRemoveAction();
 
@@ -81,9 +79,7 @@ public class ItemsPanel extends JPanel implements ActivityListener {
         buttons.add(new JButton(remove));
         add(buttons, cons);
 
-        setContents(categories[0]);
-
-        contents.setFocusable(true);
+        setContents(categories[0], null);
 
         activity.addListener(this);
     }
@@ -114,9 +110,8 @@ public class ItemsPanel extends JPanel implements ActivityListener {
             public void actionPerformed(ActionEvent e) {
                 if (UI.areYouSure(ItemsPanel.this, "PERMANENTLY delete the item '" + selected + "'")) {
                     displayedItems.remove(selected);
-                    setContents(displayedItems);
+                    setContents(displayedItems, null);
                     selectItem(null);
-                    fireValidation();
                 }
             }
         };
@@ -130,8 +125,7 @@ public class ItemsPanel extends JPanel implements ActivityListener {
                 Item item = displayedItems.defineByUserInput();         // Make a new item using user input
                 if (item == null) return;                               // User decided against making the item
                 if (displayedItems.add(item)) {
-                    setContents(displayedItems);
-                    selectItem(item);
+                    setContents(displayedItems, item);
                 } else {
                     UI.warn(ItemsPanel.this,
                             "Could not add the items as it already existed -- edit the existing item instead");
@@ -150,19 +144,14 @@ public class ItemsPanel extends JPanel implements ActivityListener {
         final JComboBox<Stored<Item>> itemsChooser = new JComboBox<>(categories);
         itemsChooser.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                setContents((Stored<Item>) itemsChooser.getSelectedItem());
+                setContents((Stored<Item>) itemsChooser.getSelectedItem(), null);
             }
         });
         return itemsChooser;
     }
 
-    private void setContents(Stored<Item> target) {
-        if (selected != null) {
-            selected.setSelected(false);
-            selected = null;
-        }
+    private void setContents(Stored<Item> target, Item selectItem) {
         displayedItems = target;
-
         GridBagConstraints cons = new GridBagConstraints();
         cons.gridx = 0;
         cons.gridy = GridBagConstraints.RELATIVE;
@@ -174,6 +163,7 @@ public class ItemsPanel extends JPanel implements ActivityListener {
             contents.add(item.getRepresentation(), cons);
         cons.weighty = 1.0;
         contents.add(Box.createVerticalGlue(), cons);
+        selectItem(selectItem);
         fireValidation();
     }
 
