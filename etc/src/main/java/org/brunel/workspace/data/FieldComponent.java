@@ -18,12 +18,15 @@ package org.brunel.workspace.data;
 
 import org.brunel.data.Dataset;
 import org.brunel.data.Field;
+import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.util.UI;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 
 /**
  * Represents a field (and can be dragged)
@@ -39,7 +42,7 @@ public class FieldComponent extends JPanel {
     public final Field field;
     public final Dataset dataset;
 
-    public FieldComponent(Field field, Dataset dataset, MouseListener listener) {
+    public FieldComponent(final Field field, final Dataset dataset, final Activity activity, MouseMotionListener dragger) {
         super(new BorderLayout());
         this.field = field;
         this.dataset = dataset;
@@ -49,16 +52,29 @@ public class FieldComponent extends JPanel {
         label.setFont(UI.SMALL_FONT);
         add(label, BorderLayout.CENTER);
 
-        label.addMouseListener(listener);
+        label.addMouseMotionListener(dragger);
         label.setTransferHandler(FIELD_TRANSFER_HANDLER);
 
         setBorder(new EmptyBorder(2,2,2,2));
         setBackground(Color.white);
 
+        MouseAdapter activityPropagation = new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                activity.fireSelect(dataset, FieldComponent.this);
+                if (e.getClickCount() > 1)
+                    activity.fireActivate(field, FieldComponent.this);
+                else
+                    activity.fireSelect(field, FieldComponent.this);
+            }
+        };
+        label.addMouseListener(activityPropagation);
     }
 
     private String restrictSize(String label) {
         return label.length() > 20 ? label.substring(0,19) + "\u2026" : label;
     }
 
+    public String toString() {
+        return "FieldComponent{" + field.name + "}";
+    }
 }

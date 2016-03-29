@@ -16,10 +16,29 @@
 
 package org.brunel.workspace.activity;
 
+import org.brunel.data.Dataset;
+import org.brunel.data.Field;
+import org.brunel.workspace.item.ItemChart;
+
 /**
  * Activity events
  */
 public class ActivityEvent {
+
+    public ItemChart getChart() {
+        if (target instanceof ItemChart) return (ItemChart) target;
+        return null;
+    }
+
+    public Dataset getData() {
+        if (target instanceof Dataset) return (Dataset) target;
+        return null;
+    }
+
+    public Field getField() {
+        if (target instanceof Field) return (Field) target;
+        return null;
+    }
 
     public enum Type {
         select,         // User indicated this
@@ -38,6 +57,6 @@ public class ActivityEvent {
 
 
     public String toString() {
-        return "ActivityEvent{" + type + " " + target + " from " + source + "}";
+        return type.toString().toUpperCase() + "(" + target + " FROM " + source + ")";
     }
 }

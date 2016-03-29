@@ -28,7 +28,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,12 +45,13 @@ public class ItemSource extends Item {
             "SOURCES", "location varchar", "data16.png"
     );
 
-    private static final MouseListener DRAG_LISTENER = new MouseAdapter() {
-        public void mousePressed(MouseEvent e) {
+    private static final MouseMotionListener DRAG_LISTENER = new MouseAdapter() {
+        public void mouseDragged(MouseEvent e) {
             JComponent c = (JComponent) e.getSource();
             TransferHandler handler = c.getTransferHandler();
             handler.exportAsDrag(c, e, TransferHandler.COPY);
         }
+
     };
 
     private String location;
@@ -103,7 +104,6 @@ public class ItemSource extends Item {
     }
 
     private JComponent makeFieldsList() {
-
         Box box = Box.createVerticalBox();
         box.setBackground(Color.CYAN);
         box.setOpaque(true);
@@ -111,7 +111,7 @@ public class ItemSource extends Item {
             String content = new String(Files.readAllBytes(Paths.get(location)), "utf-8");
             Dataset dataset = Dataset.make(CSV.read(content), true);
             for (Field f : dataset.fields)
-                if (!f.isSynthetic()) box.add(new FieldComponent(f, dataset, DRAG_LISTENER));
+                if (!f.isSynthetic()) box.add(new FieldComponent(f, dataset, activity, DRAG_LISTENER));
             return box;
         } catch (Exception e) {
             return new JLabel("Error reading file");

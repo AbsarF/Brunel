@@ -58,8 +58,8 @@ public class ItemChart extends Item {
             "CHARTS", "command varchar, parameters varchar", "chart16.png"
     );
 
-    private String command;
-    private String[] parameters;
+    public String command;
+    public String[] parameters;
 
     public ItemChart(Activity activity) {
         super(DEFINITION,activity);

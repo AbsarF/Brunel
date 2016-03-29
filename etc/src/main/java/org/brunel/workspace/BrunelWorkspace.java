@@ -76,7 +76,7 @@ public class BrunelWorkspace {
             }
         }
 
-        BrunelDisplayPanel brunel = new BrunelDisplayPanel(options);
+        BrunelDisplayPanel brunel = new BrunelDisplayPanel(options, activity);
         ItemsPanel itemsPanel = new ItemsPanel(itemSets, activity);
         StatusPanel statusPanel = new StatusPanel();
 
