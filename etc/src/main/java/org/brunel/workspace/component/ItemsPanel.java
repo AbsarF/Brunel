@@ -17,6 +17,7 @@
 package org.brunel.workspace.component;
 
 import org.brunel.workspace.item.Item;
+import org.brunel.workspace.item.Representation;
 import org.brunel.workspace.item.Stored;
 import org.brunel.workspace.util.UI;
 
@@ -24,11 +25,11 @@ import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Shows items stored in the DB
@@ -36,7 +37,8 @@ import java.awt.event.ActionListener;
 public class ItemsPanel extends JPanel {
 
     private Stored<Item> displayedItems;
-    private final JList<Item> contents;
+    private final JPanel contents;
+    private Item selected;
 
     private final Action add, remove;
 
@@ -58,17 +60,9 @@ public class ItemsPanel extends JPanel {
 
         cons.weighty = 1.0;
         cons.fill = GridBagConstraints.BOTH;
-        contents = new JList<>(displayedItems);
-        contents.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        contents.setCellRenderer(displayedItems);
+        contents = new JPanel(new GridBagLayout());
+
         contents.setBackground(UI.BACKGROUND);
-        contents.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(ListSelectionEvent e) {
-                Item value = contents.getSelectedValue();
-                remove.setEnabled(value != null);
-                displayedItems.select(value);
-            }
-        });
 
         JScrollPane scroller = new JScrollPane(contents,
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
@@ -85,15 +79,34 @@ public class ItemsPanel extends JPanel {
         buttons.add(new JButton(remove));
         add(buttons, cons);
 
-        fireValidation();
+        setContents(categories[0]);
+
+        contents.setFocusable(true);
+
+        contents.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                Component c = contents.getComponentAt(e.getPoint());
+                if (!(c instanceof Representation)) return;
+                Item item = ((Representation) c).item;
+                if (selected != null) selected.setSelected(false);
+                if (selected == item) {
+                    item.setSelected(false);
+                    selected = null;
+                } else {
+                    item.setSelected(true);
+                    selected = item;
+                }
+                fireValidation();
+            }
+        });
+
     }
 
     private Action makeRemoveAction() {
         AbstractAction action = new AbstractAction("-") {
             public void actionPerformed(ActionEvent e) {
-                Item value = contents.getSelectedValue();
-                if (UI.areYouSure(ItemsPanel.this, "PERMANENTLY delete the item '" + value + "'")) {
-                    displayedItems.remove(value);
+                if (UI.areYouSure(ItemsPanel.this, "PERMANENTLY delete the item '" + selected + "'")) {
+                    displayedItems.remove(selected);
                     fireValidation();
                 }
             }
@@ -127,12 +140,30 @@ public class ItemsPanel extends JPanel {
         final JComboBox<Stored<Item>> itemsChooser = new JComboBox<>(categories);
         itemsChooser.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                displayedItems = (Stored<Item>) itemsChooser.getSelectedItem();
-                contents.setModel(displayedItems);
-                fireValidation();       // Ensure we see the changes
+                setContents((Stored<Item>) itemsChooser.getSelectedItem());
             }
         });
         return itemsChooser;
+    }
+
+    private void setContents(Stored<Item> target) {
+        if (selected != null) {
+            selected.setSelected(false);
+            selected = null;
+        }
+        GridBagConstraints cons = new GridBagConstraints();
+        cons.gridx = 0;
+        cons.gridy = GridBagConstraints.RELATIVE;
+        cons.fill = GridBagConstraints.HORIZONTAL;
+        cons.weightx = 1.0;
+        cons.weighty = 0.0;
+        displayedItems = target;
+        contents.removeAll();
+        for (Item item : displayedItems)
+            contents.add(item.getRepresentation(), cons);
+        cons.weighty = 1.0;
+        contents.add(Box.createVerticalGlue(), cons);
+        fireValidation();
     }
 
 }

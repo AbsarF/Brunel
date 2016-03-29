@@ -19,8 +19,9 @@ package org.brunel.workspace.item;
 import org.brunel.workspace.data.ItemSource;
 import org.brunel.workspace.db.Store;
 
-import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,20 +29,24 @@ import java.util.List;
 /**
  * A set of storeable items to be used
  */
-public class Stored<T extends Item> extends AbstractListModel<T> implements ListCellRenderer<Item> {
+public class Stored<T extends Item> extends ArrayList<T>  {
 
     private final Store store;
     private final String title;
     private final T representative;
+    private final MouseAdapter titleClickHandler;
     private T selected;
-
-    private final List<T> items;
 
     private Stored(Store store, String title, T representative) {
         this.store = store;
         this.title = title;
         this.representative = representative;
-        this.items = new ArrayList<>();
+        this.titleClickHandler = new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                Container parent = e.getComponent().getParent();
+                System.out.println("parent = " + parent);
+            }
+        };
     }
 
     public boolean add(T item) {
@@ -51,29 +56,18 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
             if (isSQLConstraint(e.getCause())) return false;
             throw e;
         }
-        int n = items.size();
-        items.add(item);
-        fireContentsChanged(this, n, n);
-        return true;
+        return super.add(item);
     }
 
-    public void remove(T item) {
+    public boolean remove(Object o) {
+        T item = (T) o;
         store.removeFromTable(item.definition.tableName, item);
-        items.remove(item);
-        fireContentsChanged(this, 0, items.size());
+        return super.remove(item);
     }
 
     public void select(T value) {
-        if (selected != null) {
-            selected.getRepresentation().showContent(false);
-            int p = items.indexOf(selected);
-            fireContentsChanged(this, p, p);
-        }
-        if (value != null) {
-            value.getRepresentation().showContent(true);
-            int p = items.indexOf(value);
-            fireContentsChanged(this, p, p);
-        }
+        if (selected != null) selected.setSelected(false);
+        if (value != null) value.setSelected(true);
         selected = value;
     }
 
@@ -92,13 +86,6 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
 
     }
 
-    public Component getListCellRendererComponent(JList<? extends Item> list, Item value, int index,
-                                                  boolean isSelected, boolean cellHasFocus) {
-        Representation rep = value.getRepresentation();
-        rep.setState(isSelected, cellHasFocus);
-        return rep;
-    }
-
     public String getTableDefinition() {
         return representative.definition.tableDefinition;
     }
@@ -113,9 +100,9 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
 
     @SuppressWarnings("unchecked")
     private void initialize() {
-        items.clear();
+        clear();
         List list = store.retrieve(representative.definition.tableName, representative);
-        items.addAll(list);
+        addAll(list);
     }
 
     @SuppressWarnings("unchecked")
@@ -130,14 +117,6 @@ public class Stored<T extends Item> extends AbstractListModel<T> implements List
 
     public String toString() {
         return title;
-    }
-
-    public int getSize() {
-        return items.size();
-    }
-
-    public T getElementAt(int index) {
-        return items.get(index);
     }
 
 }

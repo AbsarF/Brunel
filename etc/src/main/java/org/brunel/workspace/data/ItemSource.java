@@ -16,6 +16,7 @@
 
 package org.brunel.workspace.data;
 
+import org.brunel.data.Dataset;
 import org.brunel.data.Field;
 import org.brunel.data.io.CSV;
 import org.brunel.workspace.item.Item;
@@ -24,6 +25,9 @@ import org.brunel.workspace.item.Representation;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -90,18 +94,31 @@ public class ItemSource extends Item {
     }
 
     private JComponent makeFieldsList() {
+
+        MouseListener listener = new DragMouseAdapter();
+
         Box box = Box.createVerticalBox();
         box.setBackground(Color.CYAN);
         box.setOpaque(true);
         try {
             String content = new String(Files.readAllBytes(Paths.get(location)), "utf-8");
-            Field[] fields = CSV.read(content);
-            for (Field f : fields) {
-                box.add(new JLabel(f.label));
+            Dataset dataset = Dataset.make(CSV.read(content), true);
+            for (Field f : dataset.fields) {
+                if (!f.isSynthetic()) box.add(new FieldComponent(f, dataset, listener));
             }
             return box;
         } catch (Exception e) {
             return new JLabel("Error reading file");
         }
     }
+
+    class DragMouseAdapter extends MouseAdapter {
+        public void mousePressed(MouseEvent e) {
+            System.out.println("DRAGGING!");
+            JComponent c = (JComponent) e.getSource();
+            TransferHandler handler = c.getTransferHandler();
+            handler.exportAsDrag(c, e, TransferHandler.COPY);
+        }
+    }
+
 }

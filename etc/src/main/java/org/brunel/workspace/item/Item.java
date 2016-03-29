@@ -47,6 +47,10 @@ public abstract class Item implements Storable {
         return representation;
     }
 
+    public void setSelected(boolean selected) {
+        if (representation != null) representation.setSelected(selected);
+    }
+
     protected abstract Representation makeRepresentation();
 
     protected Object[] makeStorableObjects(Object... additional) {

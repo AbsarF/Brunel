@@ -16,13 +16,20 @@
 
 package org.brunel.workspace.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 
 /**
  * UI utilities
  */
 public class UI {
+    private static final Logger logger = LoggerFactory.getLogger(UI.class);
+
     public static final Color BACKGROUND = Color.white;
     public static final Color CONTROLS = new Color(200, 200, 222);
 
@@ -43,5 +50,14 @@ public class UI {
         int result = JOptionPane.showConfirmDialog(c, "Are you sure you want to " + text + "?",
                 null, JOptionPane.YES_NO_OPTION);
         return result == JOptionPane.YES_OPTION;
+    }
+
+    public static ImageIcon readIcon(String name) {
+        try {
+            return new ImageIcon(ImageIO.read(UI.class.getResource("/icons/" + name)));
+        } catch (IOException e) {
+            logger.error("Unable to read Icon: " + name);
+            return null;
+        }
     }
 }
