@@ -28,7 +28,7 @@ import java.awt.*;
  */
 public class WorkspaceFrame extends JFrame {
 
-    public WorkspaceFrame(Settings settings, BrunelDisplayPanel brunel, ItemsPanel itemsPanel, StatusPanel statusPanel) {
+    public WorkspaceFrame(Settings settings, BrunelDisplayPanel brunel, ItemsPanel itemsPanel, BuilderPanel statusPanel) {
         JPanel main = new JPanel(new BorderLayout());
         main.setBackground(UI.BACKGROUND);
 

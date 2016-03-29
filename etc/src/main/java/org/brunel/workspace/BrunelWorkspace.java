@@ -21,7 +21,7 @@ import org.brunel.build.util.BuilderOptions;
 import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.component.BrunelDisplayPanel;
 import org.brunel.workspace.component.ItemsPanel;
-import org.brunel.workspace.component.StatusPanel;
+import org.brunel.workspace.component.BuilderPanel;
 import org.brunel.workspace.component.WorkspaceFrame;
 import org.brunel.workspace.db.Store;
 import org.brunel.workspace.item.Item;
@@ -78,7 +78,7 @@ public class BrunelWorkspace {
 
         BrunelDisplayPanel brunel = new BrunelDisplayPanel(options, activity);
         ItemsPanel itemsPanel = new ItemsPanel(itemSets, activity);
-        StatusPanel statusPanel = new StatusPanel();
+        BuilderPanel statusPanel = new BuilderPanel(activity);
 
         this.frame = new WorkspaceFrame(settings, brunel, itemsPanel, statusPanel);
         Dimension size = UI.getScreenSize();

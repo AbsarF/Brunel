@@ -16,6 +16,7 @@
 
 package org.brunel.workspace.data;
 
+import org.brunel.build.util.DataCache;
 import org.brunel.data.Dataset;
 import org.brunel.data.Field;
 import org.brunel.data.io.CSV;
@@ -31,8 +32,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -63,12 +62,12 @@ public class ItemSource extends Item {
     private ItemSource(Activity activity, File file) {
         this(activity);
         try {
-            location = file.getCanonicalPath();
+            id = file.getCanonicalPath();
             String name = file.getName();
             int p = name.lastIndexOf('.');
             if (p > 0) name = name.substring(0, p);
             label = CSV.readable(name);
-            id = location;
+            location = file.toURI().toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -108,8 +107,7 @@ public class ItemSource extends Item {
         box.setBackground(Color.CYAN);
         box.setOpaque(true);
         try {
-            String content = new String(Files.readAllBytes(Paths.get(location)), "utf-8");
-            Dataset dataset = Dataset.make(CSV.read(content), true);
+            Dataset dataset = DataCache.get(location);
             for (Field f : dataset.fields)
                 if (!f.isSynthetic()) box.add(new FieldComponent(f, dataset, activity, DRAG_LISTENER));
             return box;

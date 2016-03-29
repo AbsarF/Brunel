@@ -118,6 +118,7 @@ public class DataCache {
         dataset = Dataset.make(CSV.read(content));
         localCache.store(dataKey, dataset);
         if (userCache != null) userCache.store(dataKey, dataset);
+        if (uri != null) dataset.set("source", uri.toString());
         return dataset;
     }
 
