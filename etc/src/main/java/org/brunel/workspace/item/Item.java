@@ -16,6 +16,7 @@
 
 package org.brunel.workspace.item;
 
+import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.db.Storable;
 
 import java.sql.ResultSet;
@@ -27,13 +28,15 @@ import java.sql.SQLException;
 public abstract class Item implements Storable {
 
     public final ItemDefinition definition;
+    protected final Activity activity;
 
     public String id;
     protected String label;
     private Representation representation;
 
-    protected Item(ItemDefinition definition) {
+    protected Item(ItemDefinition definition, Activity activity) {
         this.definition = definition;
+        this.activity = activity;
     }
 
     public abstract Item defineByUserInput();
@@ -77,6 +80,6 @@ public abstract class Item implements Storable {
     }
 
     public String toString() {
-        return label + " (" + id + ")";
+        return label;
     }
 }

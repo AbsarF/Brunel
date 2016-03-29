@@ -14,21 +14,11 @@
  * limitations under the License.
  */
 
-package org.brunel.workspace.item;
+package org.brunel.workspace.activity;
 
 /**
- * Created by graham on 3/28/16.
+ * Implement this to be informed of activities
  */
-public class ItemDefinition {
-
-    public final String tableName;
-    public final String tableDefinition;
-    public final String imageName;
-
-
-    public ItemDefinition(String tableName, String tableDefinition, String imageName) {
-        this.tableName = tableName;
-        this.tableDefinition = "id varchar primary key, label varchar, " + tableDefinition;
-        this.imageName = imageName;
-    }
+public interface ActivityListener {
+    void handleActivity(ActivityEvent event);
 }

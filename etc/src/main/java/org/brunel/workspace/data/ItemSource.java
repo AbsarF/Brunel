@@ -19,6 +19,7 @@ package org.brunel.workspace.data;
 import org.brunel.data.Dataset;
 import org.brunel.data.Field;
 import org.brunel.data.io.CSV;
+import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.item.Item;
 import org.brunel.workspace.item.ItemDefinition;
 import org.brunel.workspace.item.Representation;
@@ -41,17 +42,25 @@ import java.sql.SQLException;
 public class ItemSource extends Item {
 
     private static final ItemDefinition DEFINITION = new ItemDefinition(
-            "SOURCES", "location varchar", "data16.png", new Item[0]
+            "SOURCES", "location varchar", "data16.png"
     );
+
+    private static final MouseListener DRAG_LISTENER = new MouseAdapter() {
+        public void mousePressed(MouseEvent e) {
+            JComponent c = (JComponent) e.getSource();
+            TransferHandler handler = c.getTransferHandler();
+            handler.exportAsDrag(c, e, TransferHandler.COPY);
+        }
+    };
 
     private String location;
 
-    public ItemSource() {
-        super(DEFINITION);
+    public ItemSource(Activity activity) {
+        super(DEFINITION, activity);
     }
 
-    private ItemSource(File file) {
-        this();
+    private ItemSource(Activity activity, File file) {
+        this(activity);
         try {
             location = file.getCanonicalPath();
             String name = file.getName();
@@ -65,7 +74,7 @@ public class ItemSource extends Item {
     }
 
     public ItemSource retrieve(ResultSet rs) throws SQLException {
-        ItemSource result = new ItemSource();
+        ItemSource result = new ItemSource(activity);
         result.readCommonFields(rs);
         result.location = rs.getString(3);
         return result;
@@ -83,7 +92,7 @@ public class ItemSource extends Item {
         f.setVisible(true);
         File[] files = f.getFiles();
         if (files.length > 0) {
-            return new ItemSource(files[0]);
+            return new ItemSource(activity, files[0]);
         } else {
             return null;
         }
@@ -95,29 +104,17 @@ public class ItemSource extends Item {
 
     private JComponent makeFieldsList() {
 
-        MouseListener listener = new DragMouseAdapter();
-
         Box box = Box.createVerticalBox();
         box.setBackground(Color.CYAN);
         box.setOpaque(true);
         try {
             String content = new String(Files.readAllBytes(Paths.get(location)), "utf-8");
             Dataset dataset = Dataset.make(CSV.read(content), true);
-            for (Field f : dataset.fields) {
-                if (!f.isSynthetic()) box.add(new FieldComponent(f, dataset, listener));
-            }
+            for (Field f : dataset.fields)
+                if (!f.isSynthetic()) box.add(new FieldComponent(f, dataset, DRAG_LISTENER));
             return box;
         } catch (Exception e) {
             return new JLabel("Error reading file");
-        }
-    }
-
-    class DragMouseAdapter extends MouseAdapter {
-        public void mousePressed(MouseEvent e) {
-            System.out.println("DRAGGING!");
-            JComponent c = (JComponent) e.getSource();
-            TransferHandler handler = c.getTransferHandler();
-            handler.exportAsDrag(c, e, TransferHandler.COPY);
         }
     }
 

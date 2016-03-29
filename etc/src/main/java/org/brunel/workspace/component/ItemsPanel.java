@@ -16,8 +16,10 @@
 
 package org.brunel.workspace.component;
 
+import org.brunel.workspace.activity.Activity;
+import org.brunel.workspace.activity.ActivityEvent;
+import org.brunel.workspace.activity.ActivityListener;
 import org.brunel.workspace.item.Item;
-import org.brunel.workspace.item.Representation;
 import org.brunel.workspace.item.Stored;
 import org.brunel.workspace.util.UI;
 
@@ -28,22 +30,22 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 /**
  * Shows items stored in the DB
  */
-public class ItemsPanel extends JPanel {
+public class ItemsPanel extends JPanel implements ActivityListener {
 
+    private final Activity activity;
     private Stored<Item> displayedItems;
     private final JPanel contents;
     private Item selected;
 
     private final Action add, remove;
 
-    public ItemsPanel(final Stored<Item>[] categories) {
+    public ItemsPanel(final Stored<Item>[] categories, Activity activity) {
         super(new GridBagLayout());
+        this.activity = activity;
         this.add = makeAddAction();
         this.remove = makeRemoveAction();
 
@@ -83,23 +85,28 @@ public class ItemsPanel extends JPanel {
 
         contents.setFocusable(true);
 
-        contents.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                Component c = contents.getComponentAt(e.getPoint());
-                if (!(c instanceof Representation)) return;
-                Item item = ((Representation) c).item;
-                if (selected != null) selected.setSelected(false);
-                if (selected == item) {
-                    item.setSelected(false);
-                    selected = null;
-                } else {
-                    item.setSelected(true);
-                    selected = item;
-                }
-                fireValidation();
-            }
-        });
+        activity.addListener(this);
+    }
 
+    public void handleActivity(ActivityEvent event) {
+        if (event.target instanceof Item) {
+            selectItem((Item) event.target);
+        }
+    }
+
+    private void selectItem(Item item) {
+        if (selected != null) selected.setSelected(false);
+        if (item == null) {
+            selected = null;
+        } else if (selected == item) {
+            item.setSelected(false);
+            selected = null;
+        } else {
+            item.setSelected(true);
+            selected = item;
+        }
+
+        remove.setEnabled(selected != null);
     }
 
     private Action makeRemoveAction() {
@@ -107,6 +114,8 @@ public class ItemsPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 if (UI.areYouSure(ItemsPanel.this, "PERMANENTLY delete the item '" + selected + "'")) {
                     displayedItems.remove(selected);
+                    setContents(displayedItems);
+                    selectItem(null);
                     fireValidation();
                 }
             }
@@ -121,7 +130,8 @@ public class ItemsPanel extends JPanel {
                 Item item = displayedItems.defineByUserInput();         // Make a new item using user input
                 if (item == null) return;                               // User decided against making the item
                 if (displayedItems.add(item)) {
-                    fireValidation();
+                    setContents(displayedItems);
+                    selectItem(item);
                 } else {
                     UI.warn(ItemsPanel.this,
                             "Could not add the items as it already existed -- edit the existing item instead");
@@ -151,13 +161,14 @@ public class ItemsPanel extends JPanel {
             selected.setSelected(false);
             selected = null;
         }
+        displayedItems = target;
+
         GridBagConstraints cons = new GridBagConstraints();
         cons.gridx = 0;
         cons.gridy = GridBagConstraints.RELATIVE;
         cons.fill = GridBagConstraints.HORIZONTAL;
         cons.weightx = 1.0;
         cons.weighty = 0.0;
-        displayedItems = target;
         contents.removeAll();
         for (Item item : displayedItems)
             contents.add(item.getRepresentation(), cons);
@@ -166,5 +177,8 @@ public class ItemsPanel extends JPanel {
         fireValidation();
     }
 
+    public String toString() {
+        return "ItemsPanel";
+    }
 }
 

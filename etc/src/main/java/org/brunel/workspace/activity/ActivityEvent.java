@@ -14,21 +14,30 @@
  * limitations under the License.
  */
 
-package org.brunel.workspace.item;
+package org.brunel.workspace.activity;
 
 /**
- * Created by graham on 3/28/16.
+ * Activity events
  */
-public class ItemDefinition {
+public class ActivityEvent {
 
-    public final String tableName;
-    public final String tableDefinition;
-    public final String imageName;
+    public enum Type {
+        select,         // User indicated this
+        activate        // perform an action for it
+    }
+
+    public final Type type;
+    public final Object source;
+    public final Object target;
+
+    public ActivityEvent(Type type, Object target, Object source) {
+        this.type = type;
+        this.source = source;
+        this.target = target;
+    }
 
 
-    public ItemDefinition(String tableName, String tableDefinition, String imageName) {
-        this.tableName = tableName;
-        this.tableDefinition = "id varchar primary key, label varchar, " + tableDefinition;
-        this.imageName = imageName;
+    public String toString() {
+        return "ActivityEvent{" + type + " " + target + " from " + source + "}";
     }
 }

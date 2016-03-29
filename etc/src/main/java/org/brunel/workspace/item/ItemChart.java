@@ -17,6 +17,7 @@
 package org.brunel.workspace.item;
 
 import org.brunel.data.Data;
+import org.brunel.workspace.activity.Activity;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -43,29 +44,29 @@ public class ItemChart extends Item {
             "lineGroup | Line Chart | line x($1) y($2) color($3) mean($2) | any, any, categorical"
     };
 
-    private static Item[] makeInitialCharts() {
+    public static Item[] makeInitialCharts(Activity activity) {
         Item[] charts = new Item[base.length];
         for (int i = 0; i < base.length; i++) {
             String[] parts = base[i].split(" *\\| *");
             String[] parameterDefinitions = parts[3].split(" *\\, *");
-            charts[i] = new ItemChart(parts[0], parts[1], parts[2], parameterDefinitions);
+            charts[i] = new ItemChart(activity, parts[0], parts[1], parts[2], parameterDefinitions);
         }
         return charts;
     }
 
-    private static final ItemDefinition DEFINITION = new ItemDefinition(
-            "CHARTS", "command varchar, parameters varchar", "chart16.png", makeInitialCharts()
+    public static final ItemDefinition DEFINITION = new ItemDefinition(
+            "CHARTS", "command varchar, parameters varchar", "chart16.png"
     );
 
     private String command;
     private String[] parameters;
 
-    public ItemChart() {
-        super(DEFINITION);
+    public ItemChart(Activity activity) {
+        super(DEFINITION,activity);
     }
 
-    public ItemChart(String id, String label, String command, String[] parameters) {
-        super(DEFINITION);
+    private ItemChart(Activity activity, String id, String label, String command, String[] parameters) {
+        super(DEFINITION, activity);
         this.id = id;
         this.label = label;
         this.command = command;
@@ -73,7 +74,7 @@ public class ItemChart extends Item {
     }
 
     public ItemChart retrieve(ResultSet rs) throws SQLException {
-        ItemChart item = new ItemChart();
+        ItemChart item = new ItemChart(activity);
         item.readCommonFields(rs);
         item.command = rs.getString(3);
         item.parameters = rs.getString(4).split(" \\| ");

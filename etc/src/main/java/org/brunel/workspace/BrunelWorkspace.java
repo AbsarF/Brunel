@@ -18,12 +18,14 @@ package org.brunel.workspace;
 
 import org.brunel.app.brunel.Settings;
 import org.brunel.build.util.BuilderOptions;
+import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.component.BrunelDisplayPanel;
 import org.brunel.workspace.component.ItemsPanel;
 import org.brunel.workspace.component.StatusPanel;
 import org.brunel.workspace.component.WorkspaceFrame;
 import org.brunel.workspace.db.Store;
 import org.brunel.workspace.item.Item;
+import org.brunel.workspace.item.ItemChart;
 import org.brunel.workspace.item.Stored;
 import org.brunel.workspace.util.Initialization;
 import org.brunel.workspace.util.UI;
@@ -31,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.util.Collections;
 
 public class BrunelWorkspace {
 
@@ -60,14 +63,21 @@ public class BrunelWorkspace {
     private BrunelWorkspace(BuilderOptions options) {
 
         Settings settings = new Settings(BrunelWorkspace.class);
+        Activity activity = new Activity();
 
         Store store = new Store();
-        Stored<Item>[] itemSets = Stored.makeStores(store);
-        for (Stored<Item> a : itemSets)
+        Stored<Item>[] itemSets = Stored.makeStores(store, activity);
+        for (Stored<Item> a : itemSets) {
             Initialization.initializeTable(a, store);
+            String tableName = ItemChart.DEFINITION.tableName;
+            if (a.getTableName().equals(tableName) && store.getTableSize(tableName) == 0) {
+                logger.info("Creating initial charts");
+                Collections.addAll(a, ItemChart.makeInitialCharts(activity));
+            }
+        }
 
         BrunelDisplayPanel brunel = new BrunelDisplayPanel(options);
-        ItemsPanel itemsPanel = new ItemsPanel(itemSets);
+        ItemsPanel itemsPanel = new ItemsPanel(itemSets, activity);
         StatusPanel statusPanel = new StatusPanel();
 
         this.frame = new WorkspaceFrame(settings, brunel, itemsPanel, statusPanel);

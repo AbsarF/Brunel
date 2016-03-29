@@ -24,6 +24,8 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * Standard item representation
@@ -48,12 +50,21 @@ public class Representation extends JPanel {
 
     private final GradientStrip title;
 
-    public Representation(Item item, JComponent content) {
+    public Representation(final Item item, JComponent content) {
         super(new BorderLayout(0, 0));
         this.item = item;
         this.content = content;
 
         title = new GradientStrip(true);
+
+        title.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() > 1)
+                    item.activity.fireActivate(item, Representation.this);
+                else
+                    item.activity.fireSelect(item, Representation.this);
+            }
+        });
 
         title.add(new JLabel(UI.readIcon(item.definition.imageName)));
 
@@ -73,5 +84,9 @@ public class Representation extends JPanel {
 
     private void setBorder(Color color) {
         setBorder(new CompoundBorder(PADDING_BORDER, new LineBorder(color, 1)));
+    }
+
+    public String toString() {
+        return "Representation{" + item + "}";
     }
 }

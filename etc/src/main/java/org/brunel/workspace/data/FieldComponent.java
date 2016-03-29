@@ -45,15 +45,20 @@ public class FieldComponent extends JPanel {
         this.dataset = dataset;
 
         Icon icon = field.isDate() ? dateIcon : (field.preferCategorical() ? categoricalIcon : numericIcon);
-        JLabel label = new JLabel(field.name, icon, JLabel.LEADING);
+        JLabel label = new JLabel(restrictSize(field.label), icon, JLabel.LEADING);
+        label.setFont(UI.SMALL_FONT);
         add(label, BorderLayout.CENTER);
 
         label.addMouseListener(listener);
         label.setTransferHandler(FIELD_TRANSFER_HANDLER);
 
-        setBorder(new EmptyBorder(3, 3, 3, 3));
+        setBorder(new EmptyBorder(2,2,2,2));
         setBackground(Color.white);
 
+    }
+
+    private String restrictSize(String label) {
+        return label.length() > 20 ? label.substring(0,19) + "\u2026" : label;
     }
 
 }

@@ -32,6 +32,7 @@ public class UI {
 
     public static final Color BACKGROUND = Color.white;
     public static final Color CONTROLS = new Color(200, 200, 222);
+    public static final Font SMALL_FONT = new Font("Arial", Font.PLAIN, 11);
 
     public static Dimension getScreenSize() {
         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();

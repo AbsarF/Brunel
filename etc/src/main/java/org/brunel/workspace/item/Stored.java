@@ -16,12 +16,10 @@
 
 package org.brunel.workspace.item;
 
+import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.data.ItemSource;
 import org.brunel.workspace.db.Store;
 
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,19 +32,14 @@ public class Stored<T extends Item> extends ArrayList<T>  {
     private final Store store;
     private final String title;
     private final T representative;
-    private final MouseAdapter titleClickHandler;
+    private final Activity activity;
     private T selected;
 
     private Stored(Store store, String title, T representative) {
         this.store = store;
         this.title = title;
         this.representative = representative;
-        this.titleClickHandler = new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                Container parent = e.getComponent().getParent();
-                System.out.println("parent = " + parent);
-            }
-        };
+        this.activity = representative.activity;
     }
 
     public boolean add(T item) {
@@ -94,10 +87,6 @@ public class Stored<T extends Item> extends ArrayList<T>  {
         return representative.definition.tableName;
     }
 
-    public Item[] getDefaultItems() {
-        return representative.definition.defaultItems;
-    }
-
     @SuppressWarnings("unchecked")
     private void initialize() {
         clear();
@@ -106,10 +95,10 @@ public class Stored<T extends Item> extends ArrayList<T>  {
     }
 
     @SuppressWarnings("unchecked")
-    public static Stored<Item>[] makeStores(Store store) {
+    public static Stored<Item>[] makeStores(Store store, Activity activity) {
         Stored[] items = {
-                new Stored<>(store, "Sources", new ItemSource()),
-                new Stored<>(store, "Charts", new ItemChart())
+                new Stored<>(store, "Sources", new ItemSource(activity)),
+                new Stored<>(store, "Charts", new ItemChart(activity))
         };
         for (Stored<Item> s : items) s.initialize();
         return items;
