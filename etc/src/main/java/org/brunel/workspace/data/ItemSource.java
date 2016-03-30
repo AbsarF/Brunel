@@ -99,13 +99,12 @@ public class ItemSource extends Item {
     }
 
     protected Representation makeRepresentation() {
-        return new Representation(this, makeFieldsList());
+        return new Representation(this, makeFieldsList(), null);
     }
 
     private JComponent makeFieldsList() {
         Box box = Box.createVerticalBox();
-        box.setBackground(Color.CYAN);
-        box.setOpaque(true);
+        box.setBackground(Color.WHITE);
         try {
             Dataset dataset = DataCache.get(location);
             dataset.set("source", location);

@@ -28,7 +28,7 @@ import java.sql.SQLException;
 public abstract class Item implements Storable {
 
     public final ItemDefinition definition;
-    protected final Activity activity;
+    public final Activity activity;
 
     public String id;
     protected String label;

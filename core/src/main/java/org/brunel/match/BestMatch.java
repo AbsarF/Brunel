@@ -21,6 +21,7 @@ import org.brunel.action.ActionUtil;
 import org.brunel.action.Param;
 import org.brunel.build.util.DataCache;
 import org.brunel.data.Dataset;
+import org.brunel.data.Field;
 import org.brunel.model.VisItem;
 
 import java.io.IOException;
@@ -73,6 +74,10 @@ public class BestMatch {
 		return a.simplify();
 
 	}
+
+	public static double scoreSimilarity(Field a, Field b) {
+        return BestActionParameterSet.scoreSimilarity(a, b, false);
+    }
 
 	//Creates a set of choices for each action parameter
 	private static ArrayList<BestActionParameterSet> buildActionParameterSets(Dataset originalData, Dataset newData, Action orignalAction) {

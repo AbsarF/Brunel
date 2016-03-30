@@ -29,7 +29,11 @@ import java.sql.SQLException;
  */
 public class ItemVis extends Item {
 
-    public static final ItemDefinition DEFINITION = new ItemDefinition(
+    private static final String TOOLTIP = "This is a complete [[Visualization]].\n" +
+            "Double-click it to show it in the main view";
+
+
+    private static final ItemDefinition DEFINITION = new ItemDefinition(
             "VISUALIZATION", "dataset varchar, command varchar", "chart16.png"
     );
 
@@ -68,6 +72,6 @@ public class ItemVis extends Item {
     }
 
     protected Representation makeRepresentation() {
-        return new Representation(this, null);
+        return new Representation(this, null, TOOLTIP);
     }
 }

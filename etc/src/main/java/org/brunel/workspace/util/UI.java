@@ -65,4 +65,33 @@ public class UI {
             return null;
         }
     }
+
+    public static JLabel makeLabelWithHelp(String text, String tooltip) {
+        return new HelpLabel(text, tooltip);
+    }
+
+    public static <T extends JComponent> T makeSmall(T item) {
+        item.setFont(UI.SMALL_FONT);
+        item.setBackground(UI.BACKGROUND);
+        item.setOpaque(true);
+        return item;
+    }
+
+    public static <T extends JComponent> T makeSmall(T item, int hpad, int vpad) {
+        item = makeSmall(item);
+        item.setBorder(new EmptyBorder(vpad, hpad, vpad, hpad));
+        return item;
+    }
+
+    public static class HelpLabel extends JLabel {
+        public HelpLabel(String text, String tooltip) {
+            super(text);
+            setToolTipText(tooltip);
+        }
+
+        public JToolTip createToolTip() {
+            return HelpTooltip.make(this);
+        }
+
+    }
 }

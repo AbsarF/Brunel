@@ -20,8 +20,8 @@ import org.brunel.app.brunel.Settings;
 import org.brunel.build.util.BuilderOptions;
 import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.component.BrunelDisplayPanel;
-import org.brunel.workspace.component.ItemsPanel;
 import org.brunel.workspace.component.BuilderPanel;
+import org.brunel.workspace.component.ItemsPanel;
 import org.brunel.workspace.component.WorkspaceFrame;
 import org.brunel.workspace.db.Store;
 import org.brunel.workspace.item.Item;
@@ -56,7 +56,10 @@ public class BrunelWorkspace {
 
     }
 
+    private final ItemsPanel itemsPanel;
+
     private void start() {
+        itemsPanel.initialize();
         frame.setVisible(true);
     }
 
@@ -77,7 +80,7 @@ public class BrunelWorkspace {
         }
 
         BrunelDisplayPanel brunel = new BrunelDisplayPanel(options, activity);
-        ItemsPanel itemsPanel = new ItemsPanel(itemSets, activity, settings);
+        itemsPanel = new ItemsPanel(itemSets, activity, settings);
         BuilderPanel statusPanel = new BuilderPanel(activity);
 
         this.frame = new WorkspaceFrame(settings, brunel, itemsPanel, statusPanel);

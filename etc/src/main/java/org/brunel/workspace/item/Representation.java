@@ -48,26 +48,32 @@ public class Representation extends JPanel {
 
     private final GradientStrip title;
 
-    public Representation(final Item item, JComponent content) {
+    public Representation(final Item item, JComponent content, String tooltip) {
         super(new BorderLayout(0, 0));
         this.item = item;
         this.content = content;
+        setBackground(UI.BACKGROUND);
 
         title = new GradientStrip(true);
 
-        title.addMouseListener(new MouseAdapter() {
+
+        JLabel icon = new JLabel(UI.readIcon(item.definition.imageName));
+        JLabel label = UI.makeLabelWithHelp(item.label, tooltip);
+
+        MouseAdapter adapter = new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() > 1)
                     item.activity.fireActivate(item, Representation.this);
                 else
                     item.activity.fireSelect(item, Representation.this);
             }
-        });
+        };
+        icon.addMouseListener(adapter);
+        label.addMouseListener(adapter);
 
-        title.add(new JLabel(UI.readIcon(item.definition.imageName)));
+        title.add(icon);
 
         title.add(Box.createHorizontalGlue());
-        JLabel label = new JLabel(item.label);
         label.setBorder(UI.BORDER_PADDING);
         title.add(label);
         add(title, BorderLayout.NORTH);

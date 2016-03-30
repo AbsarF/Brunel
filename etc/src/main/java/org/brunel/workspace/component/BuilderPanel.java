@@ -19,6 +19,7 @@ package org.brunel.workspace.component;
 import org.brunel.build.util.DataCache;
 import org.brunel.data.Dataset;
 import org.brunel.data.Field;
+import org.brunel.match.BestMatch;
 import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.activity.ActivityEvent;
 import org.brunel.workspace.activity.ActivityListener;
@@ -95,14 +96,26 @@ public class BuilderPanel extends JPanel implements ActivityListener {
         fireChanges();
     }
 
-    private int getFirstEmptyParameter() {
+    private int findBestLocation(Field f) {
+        // First try for an empty slot
         for (int i = 0; i < param.length; i++)
             if (param[i] == null) return i;
-        return 0;
+
+        // Now try for the best fit
+        double bestMatch = 0;
+        int pos = 0;
+        for (int i = 0; i < param.length; i++) {
+            double d = BestMatch.scoreSimilarity(param[i], f);
+            if (d > bestMatch) {
+                bestMatch = d;
+                pos = i;
+            }
+        }
+        return pos;
     }
 
     private JLabel makeDefinition() {
-        JLabel label = new JLabel();
+        JLabel label = UI.makeLabelWithHelp("", "Drag fields into the slots at the right to define the visualization");
         label.setBorder(new EmptyBorder(2, 6, 2, 2));
         return label;
     }
@@ -125,14 +138,14 @@ public class BuilderPanel extends JPanel implements ActivityListener {
             chart = event.getChart();
             buildForChart();
         } else if (event.type == ActivityEvent.Type.activate && event.getField() != null && param != null) {
-            setFieldParameter(getFirstEmptyParameter(), event.getField());
+            Field field = event.getField();
+            setFieldParameter(findBestLocation(field), field);
             fireChanges();
         }
     }
 
     private void buildForChart() {
         definitionComponent.setText(chart.getLabel());
-        definitionComponent.setToolTipText(chart.command);
         fieldsComponent.removeAll();
         param = new Field[chart.parameters.length];
         for (int i = 0; i < chart.parameters.length; i++)

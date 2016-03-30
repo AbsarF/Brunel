@@ -39,6 +39,11 @@ public class FieldComponent extends JPanel {
     private static final Icon numericIcon = UI.readIcon("ruler16.png");
     private static final Icon categoricalIcon = UI.readIcon("pie16.png");
 
+    private static final String TOOLTIP = "Drag this [[Field]] to a slot in the " +
+            "[[Builder Panel]] to use it in a chart.\n" +
+            "Alternatively, double-click to put it in the next empty slot.\n" +
+            "{{Note: You need to have chosen a chart first!}}";
+
     public final Field field;
     public final Dataset dataset;
 
@@ -49,14 +54,15 @@ public class FieldComponent extends JPanel {
         field.set("source", dataset.strProperty("source"));
 
         Icon icon = field.isDate() ? dateIcon : (field.preferCategorical() ? categoricalIcon : numericIcon);
-        JLabel label = new JLabel(restrictSize(field.label), icon, JLabel.LEADING);
-        label.setFont(UI.SMALL_FONT);
+        JLabel label = UI.makeLabelWithHelp(restrictSize(field.label),
+                TOOLTIP);
+        UI.makeSmall(label).setIcon(icon);
         add(label, BorderLayout.CENTER);
 
         label.addMouseMotionListener(dragger);
         label.setTransferHandler(FIELD_TRANSFER_HANDLER);
 
-        setBorder(new EmptyBorder(2,2,2,2));
+        setBorder(new EmptyBorder(2, 2, 2, 2));
         setBackground(Color.white);
 
         MouseAdapter activityPropagation = new MouseAdapter() {
@@ -72,7 +78,7 @@ public class FieldComponent extends JPanel {
     }
 
     private String restrictSize(String label) {
-        return label.length() > 20 ? label.substring(0,19) + "\u2026" : label;
+        return label.length() > 20 ? label.substring(0, 19) + "\u2026" : label;
     }
 
     public String toString() {

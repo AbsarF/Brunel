@@ -23,11 +23,11 @@ import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.prefs.Preferences;
 
- public class Settings {
+public class Settings {
 
     public final String name;
 
-     private final Preferences preferences;
+    private final Preferences preferences;
 
     public Settings(String name) {
         preferences = Preferences.userNodeForPackage(Settings.class);
@@ -39,16 +39,16 @@ import java.util.prefs.Preferences;
         store.mkdirs();
     }
 
-     public Settings(Class<?> clazz) {
-         this(clazz.getCanonicalName());
-     }
+    public Settings(Class<?> clazz) {
+        this(clazz.getCanonicalName());
+    }
 
-     public int getInteger(String key, int defaultValue) {
-         String v = getString(key);
-         return v == null ? defaultValue : Integer.parseInt(v);
-     }
+    public int getInteger(String key, int defaultValue) {
+        String v = getString(key);
+        return v == null ? defaultValue : Integer.parseInt(v);
+    }
 
-     public String getString(String key) {
+    public String getString(String key) {
         return preferences.get(name + "-" + key, null);
     }
 
@@ -85,6 +85,10 @@ import java.util.prefs.Preferences;
         });
     }
 
+    public void putInteger(String key, int value) {
+        putString(key, Integer.toString(value));
+    }
+
     private int getInt(String key, int defaultValue) {
         return preferences.getInt(key, defaultValue);
     }
@@ -98,10 +102,8 @@ import java.util.prefs.Preferences;
         }
     }
 
-
     public void putString(String key, String value) {
         preferences.put(name + "-" + key, value);
     }
-
 
 }

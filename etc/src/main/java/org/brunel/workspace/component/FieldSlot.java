@@ -21,7 +21,6 @@ import org.brunel.workspace.data.FieldDroppable;
 import org.brunel.workspace.data.FieldTransferHandler;
 import org.brunel.workspace.util.UI;
 
-import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.LineBorder;
@@ -31,7 +30,9 @@ import java.awt.*;
 /**
  * A place to drag a field to
  */
-public class FieldSlot extends JLabel implements FieldDroppable {
+public class FieldSlot extends UI.HelpLabel implements FieldDroppable {
+
+    private static final String TOOLTIP = "Drag a [[Field]] into this slot to build the visualization";
 
     private final int index;
     private final BuilderPanel listener;
@@ -44,6 +45,7 @@ public class FieldSlot extends JLabel implements FieldDroppable {
     );
 
     public FieldSlot(String definition, int index, BuilderPanel listener) {
+        super(definition, TOOLTIP);
         this.definition = definition;
         this.index = index;
         this.listener = listener;

@@ -39,8 +39,8 @@ public class ItemsPanel extends JPanel implements ActivityListener {
 
     private static final String ITEMS_PANEL_CATEGORY = "items-panel-category";
     private final Stored<Item>[] categories;
+    private final Activity activity;
     private final Settings settings;
-    private final Item[] lastSelected;
     private final JComboBox<Stored<Item>> comboBox;
     private int currentCategory;
     private final JPanel contents;
@@ -50,9 +50,9 @@ public class ItemsPanel extends JPanel implements ActivityListener {
 
     public ItemsPanel(final Stored<Item>[] categories, Activity activity, Settings settings) {
         super(new GridBagLayout());
+        this.activity = activity;
         this.settings = settings;
         this.categories = categories;
-        this.lastSelected = new Item[categories.length];
         this.comboBox = makeTypeComboBox(categories);
         this.add = makeAddAction();
         this.remove = makeRemoveAction();
@@ -88,11 +88,11 @@ public class ItemsPanel extends JPanel implements ActivityListener {
         buttons.add(new JButton(remove));
         add(buttons, cons);
 
-        int initial = settings.getInteger(ITEMS_PANEL_CATEGORY, 0);
-        if (initial >= categories.length) initial = 0;
-        setContents(initial, null);
-
         activity.addListener(this);
+    }
+
+    public void initialize() {
+        setContents(settings.getInteger(ITEMS_PANEL_CATEGORY, 0), null);
     }
 
     public void handleActivity(ActivityEvent event) {
@@ -113,7 +113,9 @@ public class ItemsPanel extends JPanel implements ActivityListener {
             selected = item;
         }
 
-        lastSelected[currentCategory] = selected;
+        String key = ITEMS_PANEL_CATEGORY + "-" + categories[currentCategory].getTableName();
+        settings.putInteger(key, categories[currentCategory].indexOf(item));
+
         remove.setEnabled(selected != null);
     }
 
@@ -163,12 +165,9 @@ public class ItemsPanel extends JPanel implements ActivityListener {
     }
 
     private void setContents(int index, Item selectItem) {
+        if (index >= categories.length) index = 0;
         settings.putString(ITEMS_PANEL_CATEGORY, Integer.toString(index));
 
-        if (selectItem == null)
-            selectItem = lastSelected[index];
-        else
-            lastSelected[index] = selectItem;
 
         currentCategory = index;
         if (comboBox.getSelectedIndex() != index) {
@@ -188,7 +187,17 @@ public class ItemsPanel extends JPanel implements ActivityListener {
         cons.weighty = 1.0;
         contents.add(Box.createVerticalGlue(), cons);
 
-        selectItem(selectItem);
+
+        if (selectItem == null) {
+            String key = ITEMS_PANEL_CATEGORY + "-" + categories[index].getTableName();
+            int selectIndex = settings.getInteger(key, 0);
+            System.out.println(key + " -- " + selectIndex);
+            if (selectIndex < 0 || selectIndex > categories[index].size()) selectIndex = 0;
+            selectItem = categories[index].get(selectIndex);
+        }
+
+
+        activity.fireSelect(selectItem, this);
         fireValidation();
     }
 

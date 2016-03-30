@@ -18,7 +18,10 @@ package org.brunel.workspace.item;
 
 import org.brunel.data.Data;
 import org.brunel.workspace.activity.Activity;
+import org.brunel.workspace.util.UI;
 
+import javax.swing.*;
+import java.awt.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -43,6 +46,8 @@ public class ItemChart extends Item {
             "choropleth | Map | map x($1) label($1) color($2) tooltip(#all) | categorical, any",
             "lineGroup | Line Chart | line x($1) y($2) color($3) mean($2) | any, any, categorical"
     };
+    private static final String TOOLTIP = "Select this [[Chart]] to activate it in the [[Builder Panel]]\n" +
+            "It will be used as the template to build a visualization.";
 
     public static Item[] makeInitialCharts(Activity activity) {
         Item[] charts = new Item[base.length];
@@ -62,7 +67,7 @@ public class ItemChart extends Item {
     public String[] parameters;
 
     public ItemChart(Activity activity) {
-        super(DEFINITION,activity);
+        super(DEFINITION, activity);
     }
 
     private ItemChart(Activity activity, String id, String label, String command, String[] parameters) {
@@ -90,6 +95,29 @@ public class ItemChart extends Item {
     }
 
     protected Representation makeRepresentation() {
-        return new Representation(this, null);
+        return new Representation(this, makeParametersPanel(), TOOLTIP);
+    }
+
+    private JComponent makeParametersPanel() {
+        Box box = Box.createVerticalBox();
+        for (String s : parameters) {
+            Box item = Box.createHorizontalBox();
+            int p = s.indexOf(':');
+            String main = s, extra = null;
+            if (p > 0) {
+                main = s.substring(0, p).trim();
+                extra = s.substring(p + 1).trim();
+            }
+            item.add(Box.createHorizontalStrut(4));
+            item.add(UI.makeSmall(new JLabel("- " + main), 2, 2));
+            item.add(Box.createHorizontalGlue());
+            if (extra != null) {
+                JLabel label = new JLabel("(" + extra + ")");
+                label.setForeground(Color.lightGray);
+                item.add(UI.makeSmall(label, 2, 2));
+            }
+            box.add(item);
+        }
+        return box;
     }
 }

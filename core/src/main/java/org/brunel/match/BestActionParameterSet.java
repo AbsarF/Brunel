@@ -154,9 +154,8 @@ class BestActionParameterSet {
             //skip any synthetic fields
             if (!f.isSynthetic()) {
                 //geo-mean the current two scores
-                double scoreName = scoreFieldByNameCloseness(originalField.label, f.label);
-                double scoreFieldValueCloseness = scoreFieldByValueCloseness(originalField, f, declaredNominal(parm));
-                double score = Double.isNaN(scoreName) ? scoreFieldValueCloseness : Math.sqrt(scoreName * scoreFieldValueCloseness);
+                boolean declaredNominal = declaredNominal(parm);
+                double score = scoreSimilarity(originalField, f, declaredNominal);
                 Param newParam = Param.makeField(f.name).addModifiers(parm.modifiers());
                 actionChoices.add(new ActionParameterChoice(newParam, score));
             }
@@ -168,6 +167,12 @@ class BestActionParameterSet {
             actionChoices.subList(numChoices, actionChoices.size()).clear();
         }
 
+    }
+
+    public static double scoreSimilarity(Field originalField, Field f, boolean declaredNominal) {
+        double scoreName = scoreFieldByNameCloseness(originalField.label, f.label);
+        double scoreFieldValueCloseness = scoreFieldByValueCloseness(originalField, f, declaredNominal);
+        return Math.sqrt(scoreName * scoreFieldValueCloseness);
     }
 
     //Whether the field is being used as nominal in the action
@@ -183,21 +188,15 @@ class BestActionParameterSet {
     }
 
     //Score based on field name closeness
-    private double scoreFieldByNameCloseness(String origName, String newName) {
-
-//		String nice1 = w.nicelyReadable(origName);
-//		String nice2 = w.nicelyReadable(newName);
-
+    private static double scoreFieldByNameCloseness(String origName, String newName) {
         int lcs = getLongestCommonSubstringLength(origName, newName);
-
         double score = (double) lcs / (double) origName.length();
-
         //If we didn't org.brunel.app.match at least 75% of the characters then it probably does not matter.
-        return score >= .75 ? score : Double.NaN;
+        return score >= .75 ? score : 0.1;
 
     }
 
-    private int getLongestCommonSubstringLength(String a, String b) {
+    private static int getLongestCommonSubstringLength(String a, String b) {
         if (a.length() == 0 || b.length() == 0)
             return 0;
 
@@ -221,7 +220,7 @@ class BestActionParameterSet {
     }
 
     //Score based closeness of the values of the fields
-    private double scoreFieldByValueCloseness(Field origField, Field newField, boolean declaredNominal) {
+    private static double scoreFieldByValueCloseness(Field origField, Field newField, boolean declaredNominal) {
 
         //Nominal not specifically requested, so simple.
         if (!declaredNominal) {
@@ -245,15 +244,14 @@ class BestActionParameterSet {
 
     //Will do all positive value comparisons.
     //Assumption on skewness is that the sign does not really make a difference when choosing fields.
-    private double pctDiffScore(double v1, double v2) {
+    private static double pctDiffScore(double v1, double v2) {
         double av1 = Math.abs(v1);
         double av2 = Math.abs(v2);
         double max = Math.max(av1, av2);
         return 1.0 - Math.abs(av1 - av2) / max;
     }
 
-    private double propertyDiffScore(String numericProperty, Field f1, Field f2) {
-
+    private static double propertyDiffScore(String numericProperty, Field f1, Field f2) {
         Double p1 = f1.numProperty(numericProperty);
         Double p2 = f2.numProperty(numericProperty);
         if (p1 == null || p2 == null) return Double.NaN;
@@ -261,7 +259,7 @@ class BestActionParameterSet {
 
     }
 
-    private double scoreByDistributionCloseness(Field origField, Field newField) {
+    private static double scoreByDistributionCloseness(Field origField, Field newField) {
 
         //Pct. differences for distribution properties
         double varianceScore = propertyDiffScore("variance", origField, newField);
@@ -277,7 +275,7 @@ class BestActionParameterSet {
     }
 
     //Skip any missing values
-    private double geoMeanNoMissing(double... vals) {
+    private static double geoMeanNoMissing(double... vals) {
         int count = 0;
         double mult = 1.0;
 
