@@ -19,6 +19,7 @@ package org.brunel.workspace.item;
 import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.db.Storable;
 
+import javax.swing.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -39,7 +40,7 @@ public abstract class Item implements Storable {
         this.activity = activity;
     }
 
-    public abstract Item defineByUserInput();
+    public abstract Item defineByUserInput(JComponent owner);
 
     public String getLabel() {
         return label;
@@ -49,6 +50,10 @@ public abstract class Item implements Storable {
         if (representation == null) representation = makeRepresentation();
         return representation;
     }
+
+    public void setIsRepresentative() {
+        // Most types do not care
+    };
 
     public void setSelected(boolean selected) {
         if (representation != null) representation.setSelected(selected);
@@ -72,11 +77,12 @@ public abstract class Item implements Storable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        return id.equals(((Item) o).id);
+        Item item = (Item) o;
+        return id != null ? id.equals(item.id) : item.id == null;
     }
 
     public int hashCode() {
-        return id.hashCode();
+        return id != null ? id.hashCode() : 0;
     }
 
     public String toString() {

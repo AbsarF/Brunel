@@ -42,7 +42,7 @@ public class ItemChart extends Item {
             "wordle | Wordle | text x($1) cloud color($1) size(#count) | categorical:200",
             "wordle2 | Sized Wordle | text x($1) cloud color($1) size($2) | categorical:200, positive",
             "heatmap | Heat Map | x($1) y($2) sort(#count) color(#count) label(#count) | categorical:15, categorical:15",
-            "treemap | TreeMap | bar x($1) treemap color($1[-1]) size(#count) label($1[-0]) | multiCategorical",
+            "treemap | TreeMap | bar x($1) treemap color($1[-2]) size(#count) label($1[-1]) | multiCategorical",
             "choropleth | Map | map x($1) label($1) color($2) tooltip(#all) | categorical, any",
             "lineGroup | Line Chart | line x($1) y($2) color($3) mean($2) | any, any, categorical"
     };
@@ -78,6 +78,10 @@ public class ItemChart extends Item {
         this.parameters = parameters;
     }
 
+    public boolean isMulti() {
+        return parameters[parameters.length-1].startsWith("multi");
+    }
+
     public ItemChart retrieve(ResultSet rs) throws SQLException {
         ItemChart item = new ItemChart(activity);
         item.readCommonFields(rs);
@@ -90,7 +94,7 @@ public class ItemChart extends Item {
         return makeStorableObjects(command, Data.join(parameters, " | "));
     }
 
-    public ItemChart defineByUserInput() {
+    public ItemChart defineByUserInput(JComponent owner) {
         return null;
     }
 

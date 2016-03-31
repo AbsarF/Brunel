@@ -102,20 +102,12 @@ public class ItemsPanel extends JPanel implements ActivityListener {
     }
 
     private void selectItem(Item item) {
+        if (item == selected) return;       // Nothing to do
         if (selected != null) selected.setSelected(false);
-        if (item == null) {
-            selected = null;
-        } else if (selected == item) {
-            item.setSelected(false);
-            selected = null;
-        } else {
-            item.setSelected(true);
-            selected = item;
-        }
-
+        selected = item;
+        if (selected != null) selected.setSelected(true);
         String key = ITEMS_PANEL_CATEGORY + "-" + categories[currentCategory].getTableName();
         settings.putInteger(key, categories[currentCategory].indexOf(item));
-
         remove.setEnabled(selected != null);
     }
 
@@ -136,7 +128,7 @@ public class ItemsPanel extends JPanel implements ActivityListener {
     private Action makeAddAction() {
         return new AbstractAction("+") {
             public void actionPerformed(ActionEvent e) {
-                Item item = categories[currentCategory].defineByUserInput();    // Make a new item using user input
+                Item item = categories[currentCategory].defineByUserInput(ItemsPanel.this);    // Make a new item using user input
                 if (item == null) return;                                       // User decided against making the item
                 if (categories[currentCategory].add(item)) {
                     setContents(currentCategory, item);
@@ -168,7 +160,6 @@ public class ItemsPanel extends JPanel implements ActivityListener {
         if (index >= categories.length) index = 0;
         settings.putString(ITEMS_PANEL_CATEGORY, Integer.toString(index));
 
-
         currentCategory = index;
         if (comboBox.getSelectedIndex() != index) {
             comboBox.setSelectedIndex(index);
@@ -187,17 +178,18 @@ public class ItemsPanel extends JPanel implements ActivityListener {
         cons.weighty = 1.0;
         contents.add(Box.createVerticalGlue(), cons);
 
-
         if (selectItem == null) {
             String key = ITEMS_PANEL_CATEGORY + "-" + categories[index].getTableName();
-            int selectIndex = settings.getInteger(key, 0);
+            int selectIndex = settings.getInteger(key, -1);
             System.out.println(key + " -- " + selectIndex);
-            if (selectIndex < 0 || selectIndex > categories[index].size()) selectIndex = 0;
-            selectItem = categories[index].get(selectIndex);
+            if (selectIndex >= categories[index].size()) selectIndex = -1;
+            if (selectIndex >= 0) selectItem = categories[index].get(selectIndex);
         }
 
-
-        activity.fireSelect(selectItem, this);
+        if (selectItem != null)
+            activity.fireSelect(selectItem, this);
+        else
+            selectItem(null);
         fireValidation();
     }
 

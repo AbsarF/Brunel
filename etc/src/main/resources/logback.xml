@@ -37,6 +37,4 @@
 
     <logger name="org.brunel" level="info"/>
 
-    <logger name="org.brunel.workspace.activity" level="trace"/>
-
 </configuration>

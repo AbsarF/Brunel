@@ -20,6 +20,7 @@ import org.brunel.workspace.activity.Activity;
 import org.brunel.workspace.data.ItemSource;
 import org.brunel.workspace.db.Store;
 
+import javax.swing.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,14 +33,13 @@ public class Stored<T extends Item> extends ArrayList<T>  {
     private final Store store;
     private final String title;
     private final T representative;
-    private final Activity activity;
     private T selected;
 
     private Stored(Store store, String title, T representative) {
         this.store = store;
         this.title = title;
         this.representative = representative;
-        this.activity = representative.activity;
+        representative.setIsRepresentative();
     }
 
     public boolean add(T item) {
@@ -74,8 +74,8 @@ public class Stored<T extends Item> extends ArrayList<T>  {
     }
 
     @SuppressWarnings("unchecked")
-    public T defineByUserInput() {
-        return (T) representative.defineByUserInput();
+    public T defineByUserInput(JComponent owner) {
+        return (T) representative.defineByUserInput(owner);
 
     }
 
@@ -88,7 +88,7 @@ public class Stored<T extends Item> extends ArrayList<T>  {
     }
 
     @SuppressWarnings("unchecked")
-    private void initialize() {
+    public void initializeFromStore() {
         clear();
         List list = store.retrieve(representative.definition.tableName, representative);
         addAll(list);
@@ -96,12 +96,11 @@ public class Stored<T extends Item> extends ArrayList<T>  {
 
     @SuppressWarnings("unchecked")
     public static Stored<Item>[] makeStores(Store store, Activity activity) {
-        Stored[] items = {
+        return new Stored[]{
+                new Stored<>(store, "Patterns", new ItemChart(activity)),
                 new Stored<>(store, "Sources", new ItemSource(activity)),
-                new Stored<>(store, "Charts", new ItemChart(activity))
+                new Stored<>(store, "Charts", new ItemVis(activity))
         };
-        for (Stored<Item> s : items) s.initialize();
-        return items;
     }
 
     public String toString() {

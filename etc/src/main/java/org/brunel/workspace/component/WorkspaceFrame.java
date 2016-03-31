@@ -22,27 +22,49 @@ import org.brunel.workspace.util.UI;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 /**
  * The Frame for the workspace
  */
 public class WorkspaceFrame extends JFrame {
 
+    private final BrunelDisplayPanel brunel;
+
     public WorkspaceFrame(Settings settings, BrunelDisplayPanel brunel, ItemsPanel itemsPanel, BuilderPanel statusPanel) {
+        this.brunel = brunel;
         JPanel main = new JPanel(new BorderLayout());
         main.setBackground(UI.BACKGROUND);
 
-        JPanel inner  = new JPanel(new BorderLayout());
+        JPanel inner = new JPanel(new BorderLayout());
         inner.setBackground(UI.BACKGROUND);
 
         inner.add(new ExpandablePanel("Status", statusPanel, settings, false), BorderLayout.SOUTH);
         inner.add(brunel, BorderLayout.CENTER);
-
 
         main.add(new ExpandablePanel("Panels", itemsPanel, settings, true), BorderLayout.EAST);
         main.add(inner, BorderLayout.CENTER);
 
         setContentPane(main);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        JMenuBar menubar = new JMenuBar();
+        setJMenuBar(menubar);
+        menubar.add(makeUtilityMenu());
+    }
+
+    private JMenu makeUtilityMenu() {
+        JMenu menu = new JMenu("Do");
+
+        AbstractAction a = new AbstractAction("Show Web Page") {
+            public void actionPerformed(ActionEvent e) {
+                String[] pages = UI.ask(brunel, "Go to URL",
+                        new String[]{"Internet Address", null, "Enter a fully-qualified URL (with http://)"});
+                if (pages != null) brunel.getBrowser().loadURL(pages[0]);
+            }
+        };
+        menu.add(a);
+
+        return menu;
     }
 }

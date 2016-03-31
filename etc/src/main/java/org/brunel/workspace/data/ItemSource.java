@@ -84,7 +84,7 @@ public class ItemSource extends Item {
         return makeStorableObjects(location);
     }
 
-    public ItemSource defineByUserInput() {
+    public ItemSource defineByUserInput(JComponent owner) {
         FileDialog f = new FileDialog((JFrame) null);
         f.setTitle("Choose a CSV File");
         f.setMode(FileDialog.LOAD);

@@ -72,6 +72,8 @@ public class BrunelWorkspace {
         Stored<Item>[] itemSets = Stored.makeStores(store, activity);
         for (Stored<Item> a : itemSets) {
             Initialization.initializeTable(a, store);
+            a.initializeFromStore();
+
             String tableName = ItemChart.DEFINITION.tableName;
             if (a.getTableName().equals(tableName) && store.getTableSize(tableName) == 0) {
                 logger.info("Creating initial charts");

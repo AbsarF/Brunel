@@ -141,6 +141,5 @@ public class Store {
         else if (o instanceof URL) statement.setURL(index, (URL) o);
         else if (o instanceof byte[]) statement.setBytes(index, (byte[]) o);
         else throw new IllegalArgumentException("SQL cannot store item: " + o);
-
     }
 }

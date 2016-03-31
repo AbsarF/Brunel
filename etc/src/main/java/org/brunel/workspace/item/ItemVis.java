@@ -19,7 +19,11 @@ package org.brunel.workspace.item;
 import org.brunel.build.util.DataCache;
 import org.brunel.data.Dataset;
 import org.brunel.workspace.activity.Activity;
+import org.brunel.workspace.activity.ActivityEvent;
+import org.brunel.workspace.activity.ActivityListener;
+import org.brunel.workspace.util.UI;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,7 +36,6 @@ public class ItemVis extends Item {
     private static final String TOOLTIP = "This is a complete [[Visualization]].\n" +
             "Double-click it to show it in the main view";
 
-
     private static final ItemDefinition DEFINITION = new ItemDefinition(
             "VISUALIZATION", "dataset varchar, command varchar", "chart16.png"
     );
@@ -40,9 +43,12 @@ public class ItemVis extends Item {
     public String dataDef;
     public String brunelCommand;
 
+    private ItemVis lastPublished;
+
     public ItemVis(Activity activity) {
         super(DEFINITION, activity);
     }
+
     public ItemVis(String dataDef, String brunelCommand, Activity activity) {
         super(DEFINITION, activity);
         this.dataDef = dataDef;
@@ -67,8 +73,28 @@ public class ItemVis extends Item {
         return makeStorableObjects(dataDef, brunelCommand);
     }
 
-    public ItemVis defineByUserInput() {
-        return null;
+    public ItemVis defineByUserInput(JComponent owner) {
+        if (lastPublished == null) return null;
+        String[] definitions = UI.ask(owner, "Define this visualization",
+                new String[]{"Brunel Command", lastPublished.brunelCommand},
+                new String[]{"Data", lastPublished.dataDef},
+                new String[]{"Name", null, "Unique name for the visualization"},
+                new String[]{"Label", null, "Label for the visualization"}
+        );
+        if (definitions == null) return null;
+        ItemVis vis = new ItemVis(lastPublished.dataDef, lastPublished.brunelCommand, activity);
+        vis.id = definitions[0];
+        vis.label = definitions[1];
+        return vis;
+    }
+
+    public void setIsRepresentative() {
+        activity.addListener(new ActivityListener() {
+            public void handleActivity(ActivityEvent event) {
+                if (event.type == ActivityEvent.Type.activate && event.target instanceof ItemVis)
+                    lastPublished = (ItemVis) event.target;
+            }
+        });
     }
 
     protected Representation makeRepresentation() {

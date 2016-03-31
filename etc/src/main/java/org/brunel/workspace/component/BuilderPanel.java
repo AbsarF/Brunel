@@ -17,6 +17,7 @@
 package org.brunel.workspace.component;
 
 import org.brunel.build.util.DataCache;
+import org.brunel.data.Data;
 import org.brunel.data.Dataset;
 import org.brunel.data.Field;
 import org.brunel.match.BestMatch;
@@ -26,12 +27,16 @@ import org.brunel.workspace.activity.ActivityListener;
 import org.brunel.workspace.item.ItemChart;
 import org.brunel.workspace.item.ItemVis;
 import org.brunel.workspace.util.UI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -39,6 +44,8 @@ import java.util.Map;
  * Builds Brunel
  */
 public class BuilderPanel extends JPanel implements ActivityListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(BuilderPanel.class);
 
     private final Activity activity;
     private final JLabel definitionComponent;
@@ -63,7 +70,7 @@ public class BuilderPanel extends JPanel implements ActivityListener {
 
         // The top panel gives overall definitions and slots to drag to
         Box top = Box.createHorizontalBox();
-        top.setBorder(new MatteBorder(1,0,1,0, UI.CONTROLS));
+        top.setBorder(new MatteBorder(1, 0, 1, 0, UI.CONTROLS));
         top.add(definitionComponent);
         top.add(fieldsComponent);
         top.add(Box.createVerticalStrut(32));
@@ -79,7 +86,8 @@ public class BuilderPanel extends JPanel implements ActivityListener {
 
     public void setFieldParameter(int index, Field field) {
         param[index] = field;
-        ((FieldSlot) fieldsComponent.getComponent(index)).setField((Field) field);
+        FieldSlot slot = (FieldSlot) fieldsComponent.getComponent(index);
+        slot.setField(field);
         if (field == null) return;
         try {
             this.data = DataCache.get(field.strProperty("source"));
@@ -92,6 +100,14 @@ public class BuilderPanel extends JPanel implements ActivityListener {
         for (int i = 0; i < param.length; i++)
             if (param[i] != null && data.field(param[i].name) == null)
                 param[i] = null;
+
+        // If we dropped into the last slot for a multi-category, we add a slot
+        if (index == param.length - 1 && chart.isMulti()) {
+            // Need to add a new slot
+            String lastParam = chart.parameters[chart.parameters.length-1];
+            param = Arrays.copyOf(param, param.length + 1);
+            fieldsComponent.add(new FieldSlot(lastParam, index + 1, this));
+        }
 
         fireChanges();
     }
@@ -123,7 +139,7 @@ public class BuilderPanel extends JPanel implements ActivityListener {
     private Box makeFieldsPanel() {
         Box box = Box.createHorizontalBox();
         box.setBackground(UI.BACKGROUND);
-        box.setBorder(new EmptyBorder(6,2,6,2));
+        box.setBorder(new EmptyBorder(6, 2, 6, 2));
         return box;
     }
 
@@ -161,11 +177,18 @@ public class BuilderPanel extends JPanel implements ActivityListener {
 
         // We can make an action, even with no fields
         String brunelCommand = makeText();
-        activity.fireSelect(org.brunel.action.Action.parse(brunelCommand), this);
+        try {
+            activity.fireSelect(org.brunel.action.Action.parse(brunelCommand), this);
+        } catch (Exception e) {
+            logger.error("Failed to build action: " + brunelCommand);
+        }
 
-        // Can we make a complete vis item?
         if (data == null) return;
-        for (Field s : param) if (s == null) return;
+        // Can we make a complete vis item? Do we have all necessary parameters?
+        for (int i = 0; i < chart.parameters.length; i++) {
+            Field s = param[i];
+            if (s == null) return;
+        }
 
         ItemVis vis = new ItemVis(param[0].strProperty("source"), brunelCommand, activity);
         activity.fireActivate(vis, this);
@@ -193,8 +216,13 @@ public class BuilderPanel extends JPanel implements ActivityListener {
                     }
                 }
 
-                // Modify the text
-                text = this.modifyStringForMulti(text, param, i);
+                // Make a list of all the multiple fields
+                ArrayList<String> multiFields = new ArrayList<>();
+                for (int k=i; k< param.length; k++)
+                    if (param[k] != null) multiFields.add(param[k].name);
+
+                // Pass them down to be replaced into the command
+                text = this.modifyStringForMulti(text, multiFields, "\\$" + (i + 1));
 
             } else {
 
@@ -220,21 +248,29 @@ public class BuilderPanel extends JPanel implements ActivityListener {
         return "BuilderPanel";
     }
 
-    private String modifyStringForMulti(String text, Field[] fields, int start) {
-        int n = fields.length - start;
-        String all = "";
+    private String modifyStringForMulti(String text, ArrayList<String> fields, String key) {
 
-        for (int i = 0; i < n; ++i) {
-            text = text.replaceAll("\\$" + (start + 1) + "\\[" + i + "\\]", fields[start + i].name);
-            text = text.replaceAll("\\$" + (start + 1) + "\\[-" + i + "\\]", fields[fields.length - 1 - i].name);
-            if (i > 0) {
-                all = all + ", ";
-            }
+        if (fields.isEmpty()) return text;      // Not defined yet
 
-            all = all + fields[start + i].name;
+        // Create the list of all field names:
+        String allNames = Data.join(fields);
+
+        // Replace any item that looks like this '$1[1]' with the i'th member
+        // If we go past the end, just use the last one
+        for (int i = 0; i < fields.size() + 5; ++i) {
+            String fieldName = fields.get(Math.min(i, fields.size() - 1));
+            text = text.replaceAll(key + "\\[" + (i + 1) + "\\]", fieldName);
         }
 
-        return text.replaceAll("\\$" + (start + 1), all);
+        // Replace any item that looks like this '$1[-1]' with the i'th member
+        // If we go past the beginning, just use the first one
+        for (int i = 0; i < fields.size() + 5; ++i) {
+            String fieldName = fields.get(Math.max(0, fields.size() - i - 1));
+            text = text.replaceAll(key + "\\[\\-" + (i + 1) + "\\]", fieldName);
+        }
+
+        // Replace the '$1' statement with all the names
+        return text.replaceAll(key, allNames);
     }
 
     private int needsBinning(String p, Field f) {
